@@ -71,6 +71,9 @@ setappdata(gcf, 'plotmode', 1);
 addpath(genpath('./wfTools/'))
 addpath(genpath('./PickingCode/'))
 
+addpath('../irisFetch/')
+javaaddpath('../irisFetch/IRIS-WS-2.0.18.jar')
+
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
 
