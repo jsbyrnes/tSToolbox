@@ -587,8 +587,15 @@ function plotMap
     load('CMfine')
     hMapQC  = scatter( [ts_run(fw_ind, useVec).longitude],  [ts_run(fw_ind, useVec).latitude],  20, [ts_run(fw_ind, useVec).tStar_WF],  'filled');
     hMapNQC = scatter( [ts_run(fw_ind, ~useVec).longitude], [ts_run(fw_ind, ~useVec).latitude], 20, [ts_run(fw_ind, ~useVec).tStar_WF], 'filled');
-    colormap(cm); hC = colorbar; hC.Location = 'westoutside'; hC.Label.String = '\Deltat*, s';
-    caxis([ min([ts_run(fw_ind, useVec).tStar_WF] - 0.1) max([ts_run(fw_ind, useVec).tStar_WF] + 0.1)]);
+    colormap(cm); 
+    
+    % edited by Zhao, fix the problem of multi colorbars when press
+    % backspace (when changing the file path)
+    C = findall(gcf,'type','ColorBar');
+    if isempty(C)
+        hC = colorbar; hC.Location = 'westoutside'; hC.Label.String = '\Deltat*, s';
+        caxis([ min([ts_run(fw_ind, useVec).tStar_WF] - 0.1) max([ts_run(fw_ind, useVec).tStar_WF] + 0.1)]);
+    end
     xlabel(['Longitude, ' char(176)]);
     ylabel(['Latitude, ' char(176)]);
     
@@ -754,7 +761,7 @@ if ~dl
         drawnow
 
         chan = {Traces.channel};
-        Traces(~strcmp(chan, 'BHZ')) = [];
+        Traces(~strcmp(chan, 'HHZ')) = [];
         
         lon = [Traces.longitude];
         [~, sind] = sort(lon);
