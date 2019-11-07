@@ -763,9 +763,6 @@ if ~dl
         
         handles.LoadDataButton.String = 'Loading...';
         drawnow
-
-        chan = {Traces.channel};
-        Traces(~strcmp(chan, 'HHZ')) = [];
         
         lon = [Traces.longitude];
         [~, sind] = sort(lon);
