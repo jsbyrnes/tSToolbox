@@ -11,33 +11,33 @@ eTime=srchParams.eTime;
 latLonBox=srchParams.latLonBox;
 % 'detail' parameter
 if isfield(srchParams,'detl')
-    detl=srchParams.detl
+    detl=srchParams.detl;
 else
-    detl=''
+    detl='';
 end
 % 'network' parameter
 if isfield(srchParams,'net')
-    net=srchParams.net
+    net=srchParams.net;
 else
-    net=''
+    net='';
 end
 % 'station' parameter
 if isfield(srchParams,'sta')
-    sta=srchParams.sta
+    sta=srchParams.sta;
 else
-    sta=''
+    sta='';
 end
 % 'location' parameter
 if isfield(srchParams,'loc')
-    loc=srchParams.loc
+    loc=srchParams.loc;
 else
-    loc=''
+    loc='';
 end
 % 'channel' parameter
 if isfield(srchParams,'chan')
-    chan=srchParams.chan
+    chan=srchParams.chan;
 else
-    chan='BHZ,HHZ'
+    chan='BHZ,HHZ';
 end
 
 S=irisFetch.Stations(detl,net,sta,loc,chan,'boxcoordinates'...

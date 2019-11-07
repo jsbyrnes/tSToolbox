@@ -15,12 +15,11 @@ for k=1:length(Traces)
     %note: todo, here I could add something to check if sacpz is populated.
     %If it is, I can just read that information into resp and not use
     %wfGetResp
+        
+    resp          = wfGetResp(Traces(k));
+    %corrTraces(k) = wfInstCorr1trace_acausal(Traces(k), resp);
+    corrTraces(k) = wfInstCorr1trace_causal(Traces(k), resp);
     
-    resp=wfGetResp(Traces(k));
-    corrTraces(k) = wfInstCorr1trace_acausal(Traces(k), resp);
-    %corrTraces(k) = wfInstCorr1trace_causal(Traces(k), resp);
-    
-
 end
 
 

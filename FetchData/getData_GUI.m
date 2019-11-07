@@ -22,7 +22,7 @@ function varargout = getData_GUI(varargin)
 
 % Edit the above text to modify the response to help getData_GUI
 
-% Last Modified by GUIDE v2.5 07-Jan-2015 12:02:24
+% Last Modified by GUIDE v2.5 07-Nov-2019 14:33:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,8 @@ guidata(hObject, handles);
 % UIWAIT makes getData_GUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
+addpath('../tS_GUI/wfTools/');
+
 %activate the figure toolbars
 set(gcf,'ToolBar','figure')
 
@@ -92,9 +94,19 @@ setappdata(gcf,'chan','BHZ,HHZ');
 %set initial values for Event Search Parameters
 setappdata(gcf,'minZ',0);
 setappdata(gcf,'maxZ',750);
-setappdata(gcf,'minM',0);
+setappdata(gcf,'minM',5.5);
 setappdata(gcf,'maxM',10);
 
+%set initial values for download parameters
+setappdata(gcf, 'tBefore'       , 600);
+setappdata(gcf, 'tAfter'        , 600);
+setappdata(gcf, 'Taper_Fraction', 0.8);
+setappdata(gcf, 'SampleRate'    , 20);
+setappdata(gcf, 'DownloadPhase' , 'P');
+setappdata(gcf, 'FileTag'       , 'DefaultName');
+setappdata(gcf, 'ChannelString' , 'BHZ,HHZ');
+setappdata(gcf, 'Email'         , '');
+setappdata(gcf, 'Password'      , '');
 
 % --- Outputs from this function are returned to the command line.
 function varargout = getData_GUI_OutputFcn(hObject, eventdata, handles) 
@@ -282,7 +294,7 @@ h2=plot([minLon maxLon maxLon minLon minLon],...
     [minLat minLat maxLat maxLat minLat],'r-','LineWidth',2);
 %store handles in appdata (to delete later if desired)
 HH=getappdata(gcf,'someHandles');
-setappdata(gcf,'someHandles',[HH h1 h2])
+setappdata(gcf,'someHandles',[HH h1 h2]);
 
 %store the station structure in appdata
 setappdata(gcf,'SStruct',S);
@@ -310,10 +322,10 @@ minLon=min(point1(1,1),point2(1,1));
 maxLon=max(point1(1,1),point2(1,1));
 
 %put the values onto the etxt fields where they go
-set(handles.minLat_etxt,'string',num2str(minLat))
-set(handles.maxLat_etxt,'string',num2str(maxLat))
-set(handles.minLon_etxt,'string',num2str(minLon))
-set(handles.maxLon_etxt,'string',num2str(maxLon))
+set(handles.minLat_etxt,'string',num2str(minLat));
+set(handles.maxLat_etxt,'string',num2str(maxLat));
+set(handles.minLon_etxt,'string',num2str(minLon));
+set(handles.maxLon_etxt,'string',num2str(maxLon));
 
 
 % --- Executes on button press in sv2WS_btn.
@@ -324,8 +336,8 @@ function sv2WS_btn_Callback(hObject, eventdata, handles)
 %this simply puts the structure with the station info in the workspace
 S=getappdata(gcf,'SStruct');
 E=getappdata(gcf,'EStruct');
-assignin('base','S',S)
-assignin('base','E',E)
+assignin('base','S',S);
+assignin('base','E',E);
 
 
 % --- Executes on button press in clr_btn.
@@ -420,7 +432,7 @@ h3=plot(lx2,ly2,'g-');
 
 %store handles in appdata (to delete later if desired)
 HH=getappdata(gcf,'someHandles');
-setappdata(gcf,'someHandles',[HH h1 h2 h3])
+setappdata(gcf,'someHandles',[HH h1 h2 h3]);
 
 %store the station structure in appdata
 setappdata(gcf,'EStruct',E);
@@ -491,7 +503,6 @@ maxZ=getappdata(gcf,'maxZ');
 minM=getappdata(gcf,'minM');
 maxM=getappdata(gcf,'maxM');
 
-
 defAns={num2str(minZ),num2str(maxZ),num2str(minM),num2str(maxM)};
 
 prmpt={'Minimum Depth','Maximum Depth','Minimum Magnitude','Maximum Magnitude'};
@@ -549,3 +560,69 @@ function minR_etxt_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over staParams_btn.
+function staParams_btn_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to staParams_btn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton9.
+function pushbutton9_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+tB = getappdata(gcf,'tBefore');
+tA = getappdata(gcf,'tAfter');
+DP = getappdata(gcf,'DownloadPhase');
+FT = getappdata(gcf,'FileTag');
+TF = getappdata(gcf,'Taper_Fraction');
+SR = getappdata(gcf,'SampleRate');
+CS = getappdata(gcf,'ChannelString');
+EM = getappdata(gcf,'Email');
+PW = getappdata(gcf,'Password');
+
+defAns = { num2str(tB), num2str(tA), DP, FT, num2str(TF), num2str(SR), CS, EM, PW};
+prmpt  = {'Time before (seconds)', 'Time after (seconds)','Phase, P or S', ...
+    'File Tags', 'Taper Fraction', 'Sample Rate to resample to', 'Channels (comma seperated, no spaces',...
+    'Email (for restricted data)', 'Password (for restricted data)'};
+dPar   = inputdlg(prmpt,'Set Download Parameters', 1, defAns);
+
+if ~isempty(dPar) 
+    
+    setappdata(gcf, 'tBefore'       , str2double(dPar{1}));
+    setappdata(gcf, 'tAfter'        , str2double(dPar{2}));
+    setappdata(gcf, 'DownloadPhase' , dPar{3});
+    setappdata(gcf, 'FileTag'       , dPar{4});
+    setappdata(gcf, 'Taper_Fraction', str2double(dPar{5}));
+    setappdata(gcf, 'SampleRate'    , str2double(dPar{6}));
+    setappdata(gcf, 'ChannelString' , dPar{7});
+    setappdata(gcf, 'Email'         , dPar{8});
+    setappdata(gcf, 'Password'      , dPar{9});
+    
+end
+
+% --- Executes on button press in pushbutton10.
+function pushbutton10_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+E  = getappdata(gcf,'EStruct');
+S  = getappdata(gcf,'SStruct');
+tB = getappdata(gcf,'tBefore');
+tA = getappdata(gcf,'tAfter');
+DP = getappdata(gcf,'DownloadPhase');
+FT = getappdata(gcf,'FileTag');
+TF = getappdata(gcf,'Taper_Fraction');
+SR = getappdata(gcf,'SampleRate');
+CS = getappdata(gcf,'ChannelString');
+EM = getappdata(gcf,'Email');
+PW = getappdata(gcf,'Password');
+
+dummy = fetchData(E, S, tB, tA, DP, FT, TF, SR, CS, EM, PW);
+

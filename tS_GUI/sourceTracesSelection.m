@@ -754,7 +754,7 @@ if ~dl
         drawnow
 
         chan = {Traces.channel};
-        Traces(~strcmp(chan, 'BHZ')) = [];
+        Traces(~strcmp(chan, 'HHZ')) = [];
         
         lon = [Traces.longitude];
         [~, sind] = sort(lon);
