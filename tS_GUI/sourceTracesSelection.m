@@ -763,19 +763,19 @@ if ~dl
         
         handles.LoadDataButton.String = 'Loading...';
         drawnow
-<<<<<<< HEAD
 
         chan = {Traces.channel};
         Traces(~strcmp(chan, 'HHZ')) = [];
-=======
->>>>>>> origin/master
         
         lon = [Traces.longitude];
         [~, sind] = sort(lon);
         Traces = Traces(sind);
         
-        %need to remove instrument response first
-        Traces = wfRemInstResp(Traces);
+        % remove instrument response only when it has not been removed
+        % during fetching
+        if(any([Traces.instrument]))
+            Traces = wfRemInstResp(Traces); 
+        end
 
         filter_bounds = [ str2num(handles.LowHz.String) str2num(handles.HighHz.String) ];
     
