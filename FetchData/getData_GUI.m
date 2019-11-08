@@ -100,7 +100,7 @@ setappdata(gcf,'maxM',10);
 %set initial values for download parameters
 setappdata(gcf, 'tBefore'       , 600);
 setappdata(gcf, 'tAfter'        , 600);
-setappdata(gcf, 'Taper_Fraction', 0.8);
+setappdata(gcf, 'Taper_Fraction', 0.2);
 setappdata(gcf, 'SampleRate'    , 20);
 setappdata(gcf, 'DownloadPhase' , 'P');
 setappdata(gcf, 'FileTag'       , 'DefaultName');
