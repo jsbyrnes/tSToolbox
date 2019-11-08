@@ -1,47 +1,13 @@
-function [Traces] = fetchData(E,S,varargin)
-%this function goes and fetches data from the IRIS DMC using irisFetch. 
-%USAGE: [Traces] = fetchData(E,S)
-%       [Traces] = fetchData(E,S,fnameRoot)
-% where E and S are event and station structures as would be produced by
-% irisFetch.
-% The function fetches, for each event, all traces recorded by stations in
-% the station list, if any.
-% The data is saved in a .mat file named traces### where ### is sequential
-% numbers.
-% The user can optionally specify a file name root with an optional third
-% argument (see usage above).
-% This version does multiple traces for each station
-
-
-%set fname root to default and override if needed.
-tag='traces';
-if length(varargin)>=1
-    tag=varargin{1};
-end
+function [Traces] = fetchData(E, S, pre, post, phase, tag, taper_fraction, sample_rate, ...
+    channel_string, email, password)
 
 myTrace = [];
 
-if length(varargin)>=2
-   
-    PorS = varargin{2};
-    PorS = upper(PorS);
-    
-    if PorS ~= 'P' && PorS ~= 'S'
-        
-        PorS = 'P';
-        
-    end
-    
-else
-    
-    PorS = 'P';
-    
-end
-
 % now double loop through events and stations
 
-pre  = 600/(24*60*60); %seconds in fractional days (because that's what MATLAB uses for date/times)
-post = 600/(24*60*60);%1 hour after to capture all phases
+%seconds in fractional days (because that's what MATLAB uses for date/times)
+pre  = pre/(24*60*60); 
+post = post/(24*60*60);
 
 for ke=1:length(E)
     
@@ -82,11 +48,11 @@ for ke=1:length(E)
         pTime=min(pTime);
         sTime=min(sTime);
         
-        if PorS == 'P'
+        if phase == 'P'
         
             phase_time = pTime;
         
-        elseif PorS == 'S'
+        elseif phase == 'S'
             
             phase_time = sTime;
             
@@ -94,25 +60,35 @@ for ke=1:length(E)
         
         if isempty(phase_time); phase_time=times(1); end
         
-        originTimeStr=E(ke).PreferredTime;
-        originTimeNum=datenum(originTimeStr);
+        originTimeStr  = E(ke).PreferredTime;
+        originTimeNum  = datenum(originTimeStr);
         
-        startTime=originTimeNum+phase_time/(24*60*60)-pre;
-        startTime=datestr(startTime,'yyyy-mm-dd HH:MM:SS.FFF');
+        startTime = originTimeNum+phase_time/(24*60*60)-pre;
+        startTime = datestr(startTime,'yyyy-mm-dd HH:MM:SS.FFF');
         
-        endTime=originTimeNum+phase_time/(24*60*60)+post;
-        endTime=datestr(endTime,'yyyy-mm-dd HH:MM:SS.FFF');
+        endTime   = originTimeNum+phase_time/(24*60*60)+post;
+        endTime   = datestr(endTime,'yyyy-mm-dd HH:MM:SS.FFF');
         
         %fprintf('Trying event #%.0f station %s\n',ke,S(ks).StationCode)
         try
-            %channelList='BH1,BH2,BHZ,BHN,BHE,HH1,HH2,HHZ,HHE,HHN';
-            %channelList='BH1,BH2,BHZ,BHN,BHE';
-            channelList='BHZ,HHZ';
+            
+            if strcmp(email, '')
+            
                 myTrace = irisFetch.Traces(S(ks).NetworkCode,...
-                    S(ks).StationCode,'*',channelList,startTime, endTime);
+                        S(ks).StationCode,'*',channel_string,startTime, endTime);
+                    
+            else
+               
+                myTrace = irisFetch.Traces(S(ks).NetworkCode,...
+                        S(ks).StationCode,'*',channel_string,startTime, endTime, ...
+                        { email, password });
+                
+            end
+                
         catch ME
-            %keyboard
+
             continue
+            
         end
          
         
@@ -127,11 +103,11 @@ for ke=1:length(E)
             
             %note these times are relative to the start of the trace:
             
-            if PorS == 'P'
+            if phase == 'P'
             
                 [myTrace.phaseTimes]=deal([0 (sTime-pTime)]+pre*(24*60*60)); %pre back to seconds
             
-            elseif PorS == 'S'
+            elseif phase == 'S'
                
                 [myTrace.phaseTimes]=deal([ (pTime - sTime) 0]+pre*(24*60*60)); %pre back to seconds
                 
@@ -149,22 +125,30 @@ for ke=1:length(E)
     
     %skip to next event if this event had no traces whatsover
     if isempty(Traces)
+        
         continue
+    
     end
     
     % Get rid of empty structures:
-    try
-    data={Traces.data};
-    catch ME
-        keyboard
+    data = {Traces.data};
+    tf_empty  = cellfun('isempty',data);
+    Traces    = Traces(~tf_empty);
+    
+    for q = 1:length(Traces)
+    
+        %demean/detrend
+        Traces(q).data = detrend(Traces(q).data);
+        %taper
+        Traces(q).data = tukeywin(length(Traces(q).data), taper_fraction).*Traces(q).data;
+    
     end
+        
+    Traces   = wfResample(Traces, sample_rate);
+    Traces   = wfRemInstResp(Traces);
     
-    tf_empty=cellfun('isempty',data);
-    
-    Traces=Traces(~tf_empty);
-    
-    eventData=E(ke);
-    fname=sprintf('%s_%03.0f',tag,ke);
+    eventData = E(ke);
+    fname     = sprintf('%s_%03.0f',tag,ke);
     
     save(fname,'Traces','eventData')
     
