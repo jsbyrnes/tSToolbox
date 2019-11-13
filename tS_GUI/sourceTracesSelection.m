@@ -449,8 +449,9 @@ if plotmode == 1
         h=plot(t, Traces(cwf).data/rms(Traces(cwf).data(t > stfw & t < fw(2))),'b', 'LineStyle', ls, 'linewidth',1.5);
         set(h,'Tag','theTrace')
         
-        h = legend('All source traces', 'Current source estimate', 'Current data');
+        h = legend('All source traces', 'Current source estimate', 'Current data', 'fwStart', 'fwEnd', 'fwMax');
         set(h, 'Tag', 'srcLegend');
+        set(h, 'Location', 'northwest');
         
         ylimits = ylim;
         stfwh = plot( [ stfw stfw ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 1.5);
@@ -510,8 +511,9 @@ elseif plotmode == 2
         
     end
     
-    h = legend('Data', [ 'Synthetic: \Deltat* = ' num2str(ts_run(fw_ind, cwf).tStar_WF, 3)]);
+    h = legend('Data', [ 'Synthetic: \Deltat* = ' num2str(ts_run(fw_ind, cwf).tStar_WF, 3)], 'fwStart', 'fwEnd', 'fwMax');
     set(h, 'Tag', 'srcLegend');
+    set(h, 'Location', 'northwest');
         
     fw = getappdata(gcf, 'fitting_window');
     %fwh(2).XData   = [ (fw(1) + (handles.FWslide.Value/Traces(1).sampleRate)) (fw(1) + (handles.FWslide.Value/Traces(1).sampleRate)) ];
@@ -597,7 +599,11 @@ function plotMap
     C = findall(gcf,'type','ColorBar');
     if isempty(C)
         hC = colorbar; hC.Location = 'westoutside'; hC.Label.String = '\Deltat*, s';
-        caxis([ min([ts_run(fw_ind, useVec).tStar_WF] - 0.1) max([ts_run(fw_ind, useVec).tStar_WF] + 0.1)]);
+        if(any([ts_run(fw_ind, useVec).tStar_WF])) % check if the field exists
+            caxis([ min([ts_run(fw_ind, useVec).tStar_WF] - 0.1) max([ts_run(fw_ind, useVec).tStar_WF] + 0.1)]);
+        else
+            caxis([-0.1 0.1]);
+        end
     end
     
     xlabel(['Longitude, ' char(176)]);
@@ -754,7 +760,7 @@ if ~dl
 
     end
     
-    xrange        = 20;    
+    xrange        = 30;    
     %get the data and plot it all
 
     if exist(name, 'file')
@@ -765,7 +771,7 @@ if ~dl
         drawnow
 
         chan = {Traces.channel};
-        Traces(~strcmp(chan, 'HHZ')) = [];
+        Traces(~((strcmp(chan, 'BHZ') | (strcmp(chan, 'HHZ'))))) = [];
         
         lon = [Traces.longitude];
         [~, sind] = sort(lon);
