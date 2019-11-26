@@ -22,7 +22,7 @@ function varargout = getData_GUI(varargin)
 
 % Edit the above text to modify the response to help getData_GUI
 
-% Last Modified by GUIDE v2.5 07-Nov-2019 14:33:19
+% Last Modified by GUIDE v2.5 21-Nov-2019 11:41:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -625,4 +625,3 @@ EM = getappdata(gcf,'Email');
 PW = getappdata(gcf,'Password');
 
 dummy = fetchData(E, S, tB, tA, DP, FT, TF, SR, CS, EM, PW);
-
