@@ -24,7 +24,7 @@ name = 'LinearInv2';
 %These lines control how things are plotted
 v                   = -0.15:0.01:0.15;
 clim                = [-0.15 0.15];
-save_for_gmt        = 0;%not possible in this verison of the code
+save_for_gmt        = 1;
 rotation            = 55;
 collapse_y          = 0;
 buffer              = 20;%in km on the outside
@@ -296,5 +296,13 @@ end
 figure(2)
 histogram(MIsta)
 xlabel('Size of the station terms');
+
+if save_for_gmt
+   
+    [lon,lat] = minvtran(mstruct, xMat, yMat);
+    
+    dlmwrite([name '.txt'], [ lon(:) lat(:) MImodel(:) ]);
+    
+end
 
 save(name, 'MImodel', 'xMat', 'yMat', 'mstruct', 'MIevt', 'MIsta', 'dataE', 'dataI', 'dataV', 'dataX', 'dataY', 'uSta');
