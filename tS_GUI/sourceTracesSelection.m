@@ -245,6 +245,17 @@ function done_btn_Callback(hObject, eventdata, handles)
     
 function chngTr(figH,key)
 
+%for browsing for a file
+if ~isempty(key.Modifier) && strcmp(key.Modifier, 'control') && strcmp(key.Key, 'd')
+   
+    [fname, dirname]           = uigetfile('*.mat','Please select data file');
+    pathStr                    = [dirname fname];
+    handles                    = guihandles;
+    handles.DataLoadBox.String = pathStr;
+   
+       
+end
+
 dataLoaded = getappdata(gcf, 'dataLoaded');
 
 if dataLoaded
@@ -746,7 +757,7 @@ function LoadDataButton_Callback(hObject, eventdata, handles)
 % first some parameters and things, not sure I need all this.
 
 handles  = guihandles;
-name     = getappdata(gcf, 'datapath');
+name     = handles.DataLoadBox.String;
 dl       = getappdata(gcf, 'dataLoaded');
 
 HighCorner      = getappdata(gcf, 'HighCorner');
@@ -832,8 +843,9 @@ if ~dl
             xd             = minlen/Traces(1).sampleRate;
             midpoint       = (xd/2);
             xlimits        = [ (midpoint - xrange/2) ((midpoint) + xrange/2) ];
-            fitting_window = fw;%fw_start loaded directly
-
+            fitting_window = [ (midpoint - xrange/4) ((midpoint) + xrange/4) ];
+            fw_start       = (midpoint - xrange/3);
+            
             % set "use" to yes for all of them unless they are out of range
             useVec = true(1, length(Traces));
 
