@@ -85,6 +85,13 @@ set(gcf,'WindowKeyPressFcn',@chngTr)
 % make the figure resizeable
 set(gcf,'Resize','on')
 
+% and now make the actual graphic objects resizable
+f=gcf; c=f.Children;
+for k=1:length(c)
+    c(k).Units='normalized';
+end
+
+
 % --- Outputs from this function are returned to the command line.
 function varargout = sourceTracesSelection_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
