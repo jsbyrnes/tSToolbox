@@ -45,6 +45,7 @@ end
 addpath('./wfTools/')
 addpath('./PickingCode/')
 
+
 % End initialization code - DO NOT EDIT
 
 
@@ -80,6 +81,9 @@ setappdata(gcf, 'DeltaLowerLimit', '30');
 
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
+
+% make the figure resizeable
+set(gcf,'Resize','on')
 
 % --- Outputs from this function are returned to the command line.
 function varargout = sourceTracesSelection_OutputFcn(hObject, eventdata, handles) 
@@ -866,9 +870,11 @@ if ~dl
             end
 
             if ~any(useVec)
-
+                
+                f = msgbox('No traces within range', 'Error','error');
+                a=f.Children(3); a.Children.FontSize=14;
                 error('No traces within range');
-
+                
             end
         
             % set "inSrc" to no for all of them
