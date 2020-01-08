@@ -91,6 +91,11 @@ for k=1:length(c)
     c(k).Units='normalized';
 end
 
+%some cosmetic stuff
+handles.tSFWplot.Box='on';
+handles.map_ax.Box='on';
+handles.currWf_ax.Box='on';
+handles.allWf_ax.Box='on';
 
 % --- Outputs from this function are returned to the command line.
 function varargout = sourceTracesSelection_OutputFcn(hObject, eventdata, handles) 
@@ -162,9 +167,16 @@ function done_btn_Callback(hObject, eventdata, handles)
     
     fw_ending = (fitting_window(1) + 1):fitting_window(2);
     
+    %initialize waitbar
+    hWB=waitbar(0,'Getting Started','Name','t* grid search progress');
+    
     for k = 1:length(fw_ending)
-
+        
+        %print message to command window
         fprintf([ 'On window ' num2str(k) ' of ' num2str(length(fw_ending)) ' candidate windows\n' ]);
+        
+        %update waitbar
+        waitbar(k/length(fw_ending),hWB,[ 'On window ' num2str(k) ' of ' num2str(length(fw_ending)) ' candidate windows' ])
         
         for kk = 1:length(Traces)
 
@@ -184,7 +196,7 @@ function done_btn_Callback(hObject, eventdata, handles)
         end
     
     end
-    
+    delete(hWB);
     setappdata(gcf, 'ts_run', ts_run);
     setappdata(gcf, 'Traces', Traces);
     setappdata(gcf, 'fw_end', fitting_window(2));
@@ -464,19 +476,16 @@ if plotmode == 1
             
         end
         
-        h=plot(t, srcTr,'-','color',[.6 .6 .6]);
-        set(h,'Tag','srcTrMany');
+        hSrTrM=plot(t, srcTr,'-','color',[.6 .6 .6]);
+        set(hSrTrM,'Tag','srcTrMany');
         
         MsrcTr=mean(srcTr,2);
-        h=plot(t, MsrcTr,'-','color','k','linewidth',1.5);
-        set(h,'Tag','srcTr');
+        hSrTr=plot(t, MsrcTr,'-','color','k','linewidth',1.5);
+        set(hSrTr,'Tag','srcTr');
         
         delete(findobj('Tag','theTrace')); %this just gets rid of the previous one
-        h=plot(t, Traces(cwf).data/rms(Traces(cwf).data(t > stfw & t < fw(2))),'b', 'LineStyle', ls, 'linewidth',1.5);
-        set(h,'Tag','theTrace')
-        
-        h = legend('All source traces', 'Current source estimate', 'Current data');
-        set(h, 'Tag', 'srcLegend');
+        hTr=plot(t, Traces(cwf).data/rms(Traces(cwf).data(t > stfw & t < fw(2))),'b', 'LineStyle', ls, 'linewidth',1.5);
+        set(hTr,'Tag','theTrace')
         
         ylimits = ylim;
         stfwh = plot( [ stfw stfw ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 1.5);
@@ -486,6 +495,10 @@ if plotmode == 1
         fwh(2) = plot( [ fw(2) fw(2) ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
         setappdata(gcf, 'fwh', fwh);
         
+        %call to legend goes at the end, so it does not create new entries
+        %after the window limits are drawn.
+        h = legend([hSrTrM(1),hSrTr,hTr],'All source traces', 'Current source estimate', 'Current data','Location','southwest');
+        set(h, 'Tag', 'srcLegend');
     else
                 
         delete(findobj('Tag','theTrace')); %this just gets rid of the previous one
@@ -528,16 +541,15 @@ elseif plotmode == 2
     
     if ~isempty(ts_run)
         
-        h=plot(t, ts_run(fw_ind, cwf).data/rms(ts_run(fw_ind, cwf).data(t > stfw & t < fw(2))),'r', 'LineStyle', ls, 'linewidth', 1.5);
-        set(h,'Tag','synTr');
+        hSynth=plot(t, ts_run(fw_ind, cwf).data/rms(ts_run(fw_ind, cwf).data(t > stfw & t < fw(2))),'r', 'LineStyle', ls, 'linewidth', 1.5);
+        set(hSynth,'Tag','synTr');
         
-        h=plot(t, Traces(cwf).data/rms(Traces(cwf).data(t > stfw & t < fw(2))),'-','color','k', 'LineStyle', ls, 'linewidth',1.5);
-        set(h,'Tag','srcTr');
+        hObs=plot(t, Traces(cwf).data/rms(Traces(cwf).data(t > stfw & t < fw(2))),'-','color','k', 'LineStyle', ls, 'linewidth',1.5);
+        set(hObs,'Tag','srcTr');
         
     end
     
-    h = legend('Data', [ 'Synthetic: \Deltat* = ' num2str(ts_run(fw_ind, cwf).tStar_WF, 3)]);
-    set(h, 'Tag', 'srcLegend');
+    
         
     fw = getappdata(gcf, 'fitting_window');
     %fwh(2).XData   = [ (fw(1) + (handles.FWslide.Value/Traces(1).sampleRate)) (fw(1) + (handles.FWslide.Value/Traces(1).sampleRate)) ];
@@ -549,6 +561,11 @@ elseif plotmode == 2
     fwh(2) = plot( [ (fw(1) + (handles.FWslide.Value/Traces(1).sampleRate)) (fw(1) + (handles.FWslide.Value/Traces(1).sampleRate)) ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
     fwh(1).Visible = 'off';
     setappdata(gcf, 'fwh', fwh);
+    
+    %call to legend goes at the end, so it does not create new entries
+    %after the window limits are drawn.
+    h = legend([hObs, hSynth],'Observed', [ 'Synthetic: \Deltat* = ' num2str(ts_run(fw_ind, cwf).tStar_WF, 3)],'Location','southwest');
+    set(h, 'Tag', 'srcLegend');
     
     axes(handles.tSFWplot)
     hold on
@@ -611,8 +628,8 @@ function plotMap
     if ~isempty(hC);        delete(hC);   end
     
     load('CMfine')
-    hMapQC  = scatter( [ts_run(fw_ind, useVec).longitude],  [ts_run(fw_ind, useVec).latitude],  20, [ts_run(fw_ind, useVec).tStar_WF],  'filled');
-    hMapNQC = scatter( [ts_run(fw_ind, ~useVec).longitude], [ts_run(fw_ind, ~useVec).latitude], 20, [ts_run(fw_ind, ~useVec).tStar_WF], 'filled');
+    hMapQC  = scatter( [ts_run(fw_ind, useVec).longitude],  [ts_run(fw_ind, useVec).latitude],  50, [ts_run(fw_ind, useVec).tStar_WF],  'filled');
+    hMapNQC = scatter( [ts_run(fw_ind, ~useVec).longitude], [ts_run(fw_ind, ~useVec).latitude], 50, [ts_run(fw_ind, ~useVec).tStar_WF], 'filled');
     %colormap(cm); hC = colorbar; hC.Location = 'westoutside'; hC.Label.String = '\Deltat*, s';
     %caxis([ min([ts_run(fw_ind, useVec).tStar_WF] - 0.1) max([ts_run(fw_ind, useVec).tStar_WF] + 0.1)]);
     
