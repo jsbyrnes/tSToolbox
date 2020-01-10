@@ -196,8 +196,9 @@ function done_btn_Callback(hObject, eventdata, handles)
 
         Traces(k).data = Traces(k).data/max(Traces(k).data(fw_start:fitting_window(2)));
 
-        line_handles(k) = plot(t, Traces(k).data + k, 'k-', 'lineWidth', 1);
-
+        line_handles(k)               = plot(t, Traces(k).data + k, 'k-', 'lineWidth', 1);
+        line_handles(k).ButtonDownFcn = @ClickCWF;
+        
     end
 
     xlabel('Time, s')
@@ -253,7 +254,6 @@ if ~isempty(key.Modifier) && strcmp(key.Modifier, 'control') && strcmp(key.Key, 
     handles                    = guihandles;
     handles.DataLoadBox.String = pathStr;
    
-       
 end
 
 dataLoaded = getappdata(gcf, 'dataLoaded');
@@ -411,7 +411,6 @@ forSrc   = getappdata(gcf, 'forSrc');
 stfw     = getappdata(gcf, 'fw_start');
 fw       = getappdata(gcf, 'fitting_window');
 
-
 if useVec(cwf) == 1
     
     ls = '-';
@@ -511,7 +510,7 @@ elseif plotmode == 2
     if ~isempty(h); delete(h); end
     
     stfwh            = getappdata(gcf, 'stfwh');
-    fwh            = getappdata(gcf, 'fwh');
+    fwh              = getappdata(gcf, 'fwh');
     if ~isempty(stfwh); delete(stfwh); end
     if ~isempty(fwh); delete(fwh); end
     
@@ -546,8 +545,8 @@ elseif plotmode == 2
     if ~isempty(htSFW);  delete(htSFW);  end
     if ~isempty(htSFWl); delete(htSFWl);  end
 
-    xax = linspace(fw(1), fw(2), nfw);
-    htSFW = plot(xax, [ts_run(:, cwf).tStar_WF], 'ko');
+    xax    = linspace(fw(1), fw(2), nfw);
+    htSFW  = plot(xax, [ts_run(:, cwf).tStar_WF], 'ko');
     htSFWl = plot([xax(fw_ind) xax(fw_ind) ], ylim, 'k--');
     xlabel('Fitting window ending, s');
     ylabel('\Deltat*, s');
