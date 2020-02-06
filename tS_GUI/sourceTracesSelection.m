@@ -77,6 +77,7 @@ setappdata(gcf, 'LowCorner', '0.02');
 setappdata(gcf, 'ChannelsKeep', 'BHZ');
 setappdata(gcf, 'DeltaUpperLimit', '90');
 setappdata(gcf, 'DeltaLowerLimit', '30');
+setappdata(gcf, 'NewSR', 'nan');
 
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
@@ -639,7 +640,7 @@ function add_to_source
 
     if ~inSrcVec(cwf)
         %add this wf number to the list
-       srcIx=[srcIx; cwf]; 
+       srcIx(end + 1) = cwf; 
        %add this wf to the set
        Traces=getappdata(gcf,'Traces');
        currWf=Traces(cwf).data;%was 75/125
@@ -764,6 +765,7 @@ LowCorner       = getappdata(gcf, 'LowCorner');
 ChannelsKeep    = getappdata(gcf, 'ChannelsKeep');
 DeltaUpperLimit = getappdata(gcf, 'DeltaUpperLimit');
 DeltaLowerLimit = getappdata(gcf, 'DeltaLowerLimit');
+newSR           = getappdata(gcf, 'NewSR');
 
 if ~dl
 
@@ -810,13 +812,19 @@ if ~dl
                 Traces = wfRemInstResp(Traces); 
 
             end
-
+            
             if ~isnan(filter_bounds)
 
-                Traces = wfButterworth( Traces, filter_bounds);
+                Traces = wfButterworth(Traces, filter_bounds);
 
             end
 
+            if ~isnan(str2num(newSR))
+               
+                Traces = wfResample(Traces, str2num(newSR));
+                
+            end
+            
             for k = 1:length(Traces)
 
                 Traces(k).data = Traces(k).data - mean(Traces(k).data);
@@ -1861,10 +1869,10 @@ function pushbutton13_Callback(hObject, eventdata, handles)
 
 defAns = { num2str(getappdata(gcf, 'HighCorner')) num2str(getappdata(gcf, 'LowCorner')) ...
     num2str(getappdata(gcf, 'DeltaLowerLimit')) num2str(getappdata(gcf, 'DeltaUpperLimit')) ...
-    getappdata(gcf, 'ChannelsKeep') };
+    getappdata(gcf, 'ChannelsKeep') num2str(getappdata(gcf, 'NewSR')) };
 
 prmpt = { 'High frequency filter corner, Hz', 'Low frequency filter corner, Hz',...
-    'Minimum Delta', 'Maximum Delta', 'Channel, comma seperated'};
+    'Minimum Delta', 'Maximum Delta', 'Channel, comma seperated', 'New Sample Rate'};
 
 sPar = inputdlg(prmpt, 'Set Data Parameters', 1, defAns);
 
@@ -1875,6 +1883,7 @@ if ~isempty(sPar)
     setappdata(gcf,'DeltaLowerLimit', sPar{3});
     setappdata(gcf,'DeltaUpperLimit', sPar{4});
     setappdata(gcf,'ChannelsKeep',    sPar{5});
+    setappdata(gcf,'NewSR',           sPar{6});
     
 end
 
