@@ -871,13 +871,14 @@ if ~dl
                 Traces(k).azi = azi;
 
             end
-
+            
             if ~any(useVec)
-
-                error('No traces within range');
-
+                
+                handles.LoadDataButton.String = 'None in range';
+                return
+                
             end
-        
+            
             % set "inSrc" to no for all of them
             inSrcVec = false(1, length(Traces));
             

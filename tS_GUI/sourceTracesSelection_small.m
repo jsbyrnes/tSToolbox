@@ -873,9 +873,10 @@ if ~dl
             end
 
             if ~any(useVec)
-
-                error('No traces within range');
-
+                
+                handles.LoadDataButton.String = 'None in range';
+                return
+                
             end
         
             % set "inSrc" to no for all of them
