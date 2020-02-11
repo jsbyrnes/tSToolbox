@@ -776,7 +776,7 @@ if ~dl
 
     end
     
-    xrange        = 20;    
+    xrange        = 10;    
     %get the data and plot it all
 
     if exist(name, 'file')
@@ -849,7 +849,7 @@ if ~dl
 
             xd             = minlen/Traces(1).sampleRate;
             midpoint       = (xd/2);
-            xlimits        = [ (midpoint - xrange/2) ((midpoint) + xrange/2) ];
+            xlimits        = [ (midpoint - xrange) ((midpoint) + xrange) ];
             fitting_window = [ (midpoint - xrange/4) ((midpoint) + xrange/4) ];
             fw_start       = (midpoint - xrange/3);
             
