@@ -6,7 +6,13 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
     yVec = dataStruct.yVec;
 
     n = length(dataStruct.dataX);
-               
+              
+    if ~(TD_parameters.sig_flag == 1 && strcmp(TD_parameters.llh, 'DoubleGaussian'))
+       
+        error('Only use Double Gaussian Errors for TD_parameters.sig_flag of 1');
+        
+    end
+    
     %initialize the chain
     %first four nodes are top corners and CANNOT be moved
     
@@ -34,11 +40,20 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
 
     if TD_parameters.sig_flag == 1
         
-        allSig = dataStruct.allSig;    
-        %model.allSig = rand(1)*allSig(1);
-        model.allSig = allSig(1);
-        allSig = model.allSig*ones(size(allSig));    
+        if ~strcmp(TD_parameters.llh, 'DoubleGaussian')
         
+            allSig = dataStruct.allSig;    
+            %model.allSig = rand(1)*allSig(1);
+            model.allSig = allSig(1);
+            allSig = model.allSig*ones(size(allSig));
+            
+        elseif strcmp(TD_parameters.llh, 'DoubleGaussian')
+           
+            model.allSig    = sort(rand(2,1)*dataStruct.allSig(1));%second is always larger
+            model.allSig(3) = rand(1);%relative heights
+            
+        end
+                
     elseif TD_parameters.sig_flag == 2
 
         station_sig = zeros(size(dX));
@@ -79,11 +94,9 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
     
     model.phi = NaN;
         
-    [ model.phi, likelyhood] = evaluate(model.xCell, model.yCell, model.tSCell, dataStruct.allTS, allSig, ...
+    [ model.phi, model.llh] = evaluate(model.xCell, model.yCell, model.tSCell, dataStruct.allTS, allSig, ...
         dataStruct.dataE, dataStruct.dataX, dataStruct.dataY, TD_parameters);
-            
-    model.likelyhood         = likelyhood;
-        
+                    
     for iter = 1:TD_parameters.n_iter
         
         %pick birth, death, move, change, or noise
@@ -132,29 +145,38 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                 
                 tSCell_n(end) = max( [ TD_parameters.range(1) min([ tSCell_n(end) TD_parameters.range(2) ]) ]);
                 
-                [phiN, likelyhood] = evaluate(xCell_n, yCell_n, tSCell_n, dataStruct.allTS, allSig, dataStruct.dataE, ...
+                [phiN, llhN] = evaluate(xCell_n, yCell_n, tSCell_n, dataStruct.allTS, allSig, dataStruct.dataE, ...
                     dataStruct.dataX, dataStruct.dataY, TD_parameters);
                 
-                if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                r = rand(1);
+                
+                if strcmp(TD_parameters.llh, 'Gaussian')
                     
                     alpha = min([1 (TD_parameters.sig_b*sqrt(2*pi))/diff(TD_parameters.range)*...
                         exp( ((tSnew - ctS)^2)/(2*TD_parameters.sig_b^2) - (phiN - model.phi)/2)]);
-                    
-                elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                                        
+                elseif strcmp(TD_parameters.llh, 'Laplacian')
                     
                     alpha = min([1 (TD_parameters.sig_b*sqrt(2*pi))/diff(TD_parameters.range)*...
                         exp( ((tSnew - ctS)^2)/(2*TD_parameters.sig_b^2) - (phiN - model.phi))]);
                     
+                elseif strcmp(TD_parameters.llh, 'DoubleGaussian')%just numerical
+                    
+                    alpha = min([ 0 (log((TD_parameters.sig_b*sqrt(2*pi))/diff(TD_parameters.range)*...
+                        exp( ((tSnew - ctS)^2)/(2*TD_parameters.sig_b^2))) + llhN - model.llh) ]);
+                    
+                    r = log(r);
+                    
                 end
                 
-                if rand(1) <= alpha && model.nCells < TD_parameters.max_cells
+                if r <= alpha && model.nCells < TD_parameters.max_cells
                     
                     model.nCells        = model.nCells + 1;
                     model.xCell         = xCell_n;
                     model.yCell         = yCell_n;
                     model.tSCell        = tSCell_n;
                     model.phi           = phiN;
-                    model.likelyhood    = likelyhood;
+                    model.llh           = llhN;
                     model.accept        = action;
                     
                 end
@@ -179,27 +201,36 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                     
                     [phiN, likelyhood] = evaluate(xCell_n, yCell_n, tSCell_n, dataStruct.allTS, allSig, ...
                         dataStruct.dataE, dataStruct.dataX, dataStruct.dataY, TD_parameters);
-                                        
-                    if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                            
+                    r = rand(1);
+                    
+                    if strcmp(TD_parameters.llh, 'Gaussian')
 
                         alpha = min([1 diff(TD_parameters.range)/(TD_parameters.sig_b*sqrt(2*pi))*...
                             exp( -((ctS - newtS)^2)/(2*TD_parameters.sig_b^2) - (phiN - model.phi)/2)]);
 
-                    elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                    elseif strcmp(TD_parameters.llh, 'Laplacian')
 
                         alpha = min([1 diff(TD_parameters.range)/(TD_parameters.sig_b*sqrt(2*pi))*...
                             exp( -((ctS - newtS)^2)/(2*TD_parameters.sig_b^2) - (phiN - model.phi))]);
 
+                    elseif strcmp(TD_parameters.llh, 'DoubleGaussian')%just numerical
+
+                        alpha = min([0 (log(diff(TD_parameters.range)/(TD_parameters.sig_b*sqrt(2*pi))*...
+                            exp( -((ctS - newtS)^2)/(2*TD_parameters.sig_b^2) - (phiN - model.phi))) + llhN - model.llh)]);
+                        
+                        r = log(r);
+                        
                     end
                         
-                    if rand(1) <= alpha
+                    if r <= alpha
 
                         model.nCells        = model.nCells - 1;
                         model.xCell         = xCell_n;
                         model.yCell         = yCell_n;
                         model.tSCell        = tSCell_n;
                         model.phi           = phiN;
-                        model.likelyhood    = likelyhood;
+                        model.llh    = likelyhood;
                         model.accept        = action;
 
                     end
@@ -214,18 +245,24 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
 
                 tSCell_n(change) = max( [ TD_parameters.range(1) min([ tSCell_n(change) TD_parameters.range(2) ]) ]);
 
-                [phiN, likelyhood] = evaluate(model.xCell, model.yCell, tSCell_n, dataStruct.allTS, allSig, dataStruct.dataE, ...
+                [phiN, llhN] = evaluate(model.xCell, model.yCell, tSCell_n, dataStruct.allTS, allSig, dataStruct.dataE, ...
                     dataStruct.dataX, dataStruct.dataY, TD_parameters);            
                 
                 r = rand(1);
 
-                if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                if strcmp(TD_parameters.llh, 'Gaussian')
                     
                     alpha = min( [ 1 exp(-(phiN - model.phi)/2) ] );
                     
-                elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                elseif strcmp(TD_parameters.llh, 'Laplacian')
                     
                     alpha = min( [ 1 exp(-(phiN - model.phi)) ] );
+                    
+                elseif strcmp(TD_parameters.llh, 'DoubleGaussian')%just numerical
+                    
+                    alpha = min([ 0 (llhN - model.llh) ]);
+                    
+                    r = log(r);
                     
                 end
                 
@@ -233,7 +270,7 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
 
                     model.tSCell        = tSCell_n;
                     model.phi           = phiN;
-                    model.likelyhood    = likelyhood;
+                    model.llh           = llhN;
                     model.accept        = action;
 
                 end
@@ -272,18 +309,24 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                         
                 end
                 
-                [phiN, likelyhood] = evaluate(xCell_n, yCell_n, model.tSCell, dataStruct.allTS, allSig, dataStruct.dataE, ...
+                [phiN, llhN] = evaluate(xCell_n, yCell_n, model.tSCell, dataStruct.allTS, allSig, dataStruct.dataE, ...
                     dataStruct.dataX, dataStruct.dataY, TD_parameters);
 
                 r = rand(1);
                 
-                if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                if strcmp(TD_parameters.llh, 'Gaussian')
                     
                     alpha = min( [ 1 exp(-(phiN - model.phi)/2) ] );
                     
-                elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                elseif strcmp(TD_parameters.llh, 'Laplacian')
                     
                     alpha = min( [ 1 exp(-(phiN - model.phi)) ] );
+                    
+                elseif strcmp(TD_parameters.llh, 'DoubleGaussian')%just numerical
+                    
+                    alpha = min([ 0 (llhN - model.llh) ]);
+                    
+                    r = log(r);
                     
                 end
 
@@ -292,14 +335,14 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                     model.xCell         = xCell_n;
                     model.yCell         = yCell_n;
                     model.phi           = phiN;
-                    model.likelyhood    = likelyhood;
+                    model.llh           = llhN;
                     model.accept        = action;
 
                 end
 
             case 5 %change sigma
                 
-                if TD_parameters.sig_flag == 1 %uniform error
+                if TD_parameters.sig_flag == 1 && ~strcmp(TD_parameters.llh, 'DoubleGaussian')%uniform error
                     
                     sig_n = -1;
                     while sig_n <= 0
@@ -313,11 +356,11 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                     
                     r = rand(1);
                     
-                    if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                    if strcmp(TD_parameters.llh, 'Gaussian')
 
                         alpha = min( [ log(1) (log((model.allSig/sig_n))*(n) - ((phiN - model.phi)/2)) ] );
 
-                    elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                    elseif strcmp(TD_parameters.llh, 'Laplacian')
 
                         alpha = min( [ log(1) (log((model.allSig/sig_n))*(n) - (phiN - model.phi)) ] );
 
@@ -328,7 +371,7 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                         allSig              = sig_n*ones(size(allSig));
                         model.allSig        = sig_n(1);
                         model.phi           = phiN;
-                        model.likelyhood    = likelyhood;
+                        model.llh    = likelyhood;
                         model.accept        = action;
                         
                     end
@@ -357,11 +400,11 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                         dataStruct.dataX, dataStruct.dataY, TD_parameters);
                     
                     r = rand(1);                                
-                    if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                    if strcmp(TD_parameters.llh, 'Gaussian')
 
                         alpha = min( [ log(1) (sum(log(allSig)) - sum(log(allSig_n)) - ((phiN - model.phi)/2)) ] );
 
-                    elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                    elseif strcmp(TD_parameters.llh, 'Laplacian')
 
                         alpha = min( [ log(1) (sum(log(allSig)) - sum(log(allSig_n)) - ((phiN - model.phi))) ] );
 
@@ -373,7 +416,7 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                         station_sig         = station_sig_n;
                         model.allSig        = station_sig_n;
                         model.phi           = phiN;
-                        model.likelyhood    = likelyhood;
+                        model.llh    = likelyhood;
                         model.accept        = action;
                         
                     end
@@ -403,11 +446,11 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                         dataStruct.dataE, dataStruct.dataX, dataStruct.dataY, TD_parameters);
                     
                     r = rand(1);
-                    if strcmp(TD_parameters.likelyhood, 'Gaussian')
+                    if strcmp(TD_parameters.llh, 'Gaussian')
 
                         alpha = min( [ log(1) (sum(log(allSig)) - sum(log(allSig_n)) - ((phiN - model.phi)/2)) ] );
 
-                    elseif strcmp(TD_parameters.likelyhood, 'Laplacian')
+                    elseif strcmp(TD_parameters.llh, 'Laplacian')
 
                         alpha = min( [ log(1) (sum(log(allSig)) - sum(log(allSig_n)) - ((phiN - model.phi))) ] );
 
@@ -419,8 +462,26 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
                         evt_sig             = evt_sig_n;
                         model.allSig        = evt_sig_n;
                         model.phi           = phiN;
-                        model.likelyhood    = likelyhood;
+                        model.llh    = likelyhood;
                         model.accept        = action;
+                        
+                    end
+                                    
+                elseif strcmp(TD_parameters.llh, 'DoubleGaussian')
+                   
+                    parameter = randi(3);
+                    
+                    if parameter == 1
+                       
+                        
+                        
+                    elseif parameter == 2
+                        
+                        
+                        
+                    elseif parameter == 3
+                        
+                        
                         
                     end
                     
@@ -429,7 +490,7 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
         end
 
         llhist(iter)        = likelyhood;
-        model.likelyhood    = likelyhood;
+        model.llh    = likelyhood;
         sig_hist(iter, :)   = model.allSig;
         n_hist(iter)        = model.nCells;
                 

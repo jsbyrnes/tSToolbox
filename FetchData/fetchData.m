@@ -23,9 +23,23 @@ for ke=1:length(E)
         eDate=datenum(S(ks).EndDate);
         eqDate=datenum(E(ke).PreferredTime);
         
+        if isempty(eDate)
+           
+            eDate = Inf;
+            
+        end
+        
+        try
+        
         if ~(eqDate>sDate && eqDate<eDate) %if eq not between eDate and sDate
             %disp('skipped one')
             continue
+        end
+        
+        catch
+            
+            keyboard
+            
         end
         
         %calculate Delta

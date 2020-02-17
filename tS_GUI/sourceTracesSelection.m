@@ -78,6 +78,7 @@ setappdata(gcf, 'ChannelsKeep', 'BHZ');
 setappdata(gcf, 'DeltaUpperLimit', '90');
 setappdata(gcf, 'DeltaLowerLimit', '30');
 setappdata(gcf, 'NewSR', 'nan');
+setappdata(gcf, 'Networks', '');
 
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
@@ -766,6 +767,7 @@ ChannelsKeep    = getappdata(gcf, 'ChannelsKeep');
 DeltaUpperLimit = getappdata(gcf, 'DeltaUpperLimit');
 DeltaLowerLimit = getappdata(gcf, 'DeltaLowerLimit');
 newSR           = getappdata(gcf, 'NewSR');
+networks        = getappdata(gcf, 'Networks');
 
 if ~dl
 
@@ -801,10 +803,34 @@ if ~dl
 
             end
 
-            lon = [Traces.longitude];
+            lon       = [Traces.longitude];
             [~, sind] = sort(lon);
-            Traces = Traces(sind);
+            Traces    = Traces(sind);
 
+            if ~isempty(networks)
+               
+                networks = strsplit(networks, ',');
+                
+                keep = zeros(size(Traces));
+                
+                for i = 1:length(networks)
+                
+                    for j = 1:length(Traces)
+
+                        if strcmp(networks{i}, Traces(j).network)
+                           
+                            keep(j) = 1;
+                            
+                        end
+                                                    
+                    end
+                
+                end
+            
+                Traces = Traces(logical(keep));
+                
+            end
+                        
             % remove instrument response only when it has not been removed
             % during fetching
             if (any([Traces.instrument]))
@@ -850,8 +876,8 @@ if ~dl
             xd             = minlen/Traces(1).sampleRate;
             midpoint       = (xd/2);
             xlimits        = [ (midpoint - xrange) ((midpoint) + xrange) ];
-            fitting_window = [ (midpoint - xrange/4) ((midpoint) + xrange/4) ];
-            fw_start       = (midpoint - xrange/3);
+            fitting_window = [ (midpoint - xrange/3) ((midpoint) + xrange/3) ];
+            fw_start       = (midpoint - xrange/2);
             
             % set "use" to yes for all of them unless they are out of range
             useVec = true(1, length(Traces));
@@ -1177,7 +1203,8 @@ dtsamples  = round(dt*Traces(1).sampleRate);
 for k = 1:length(Traces)
     
     Traces(k).data = circshift(Traces(k).data, dtsamples(k));
-    lh(k).YData    = Traces(k).data + k;
+    lh(k).YData    = Traces(k).data/max(abs(Traces(k).data...
+        (t > fw_start & t < fw(2) )))+ k;
 
     setappdata(gcf,'cwf',k);
     
@@ -1448,13 +1475,13 @@ function WindowButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-
 stfwh          = getappdata(gcf, 'stfwh');
 stfwh_all      = getappdata(gcf, 'stfwh_all');
 fwh            = getappdata(gcf, 'fwh');
 fwh_all        = getappdata(gcf, 'fwh_all');
 t              = getappdata(gcf, 't');
+lh             = getappdata(gcf, 'lineHandles');
+Traces         = getappdata(gcf, 'Traces');
 
 delete(stfwh); delete(stfwh_all);
 delete(fwh);   delete(fwh_all);
@@ -1471,6 +1498,13 @@ handles.WindowButton.String = 'Move Fit Window';
 fw_start          = max([ 0 fw_start]);
 fitting_window(1) = max([ 0 fitting_window(1)]);
 fitting_window(2) = min([ fitting_window(2) max(t) ]);
+
+for k = 1:length(Traces)
+   
+    lh(k).YData = Traces(k).data/max(abs(Traces(k).data...
+            (t> fw_start & t< fitting_window(2)))) + k;
+    
+end
 
 axes(handles.currWf_ax)
 ylimits = ylim;
@@ -1684,6 +1718,8 @@ midpoint = getappdata(gcf, 'midpoint');
 xrange   = getappdata(gcf, 'xrange');
 inSrcVec = getappdata(gcf, 'inSrcVec');
 Traces   = getappdata(gcf, 'Traces');
+fw_start = getappdata(gcf, 'fw_start');
+fw       = getappdata(gcf, 'fitting_window');
 
 Traces   = Traces(useVec);
 
@@ -1697,11 +1733,13 @@ for k = 1:length(Traces)
     
     if inSrcVec(k)
     
-        line_handles(k) = plot(t, Traces(k).data + k, 'k-', 'LineWidth', 4);
+        line_handles(k) = plot(t, Traces(k).data/max(abs(Traces(k).data...
+            (t> fw_start & t< fw(2)))) + k, 'k-', 'LineWidth', 4);
         
     else
        
-        line_handles(k) = plot(t, Traces(k).data + k, 'k-', 'LineWidth', 1);
+        line_handles(k) = plot(t, Traces(k).data/max(abs(Traces(k).data...
+            (t> fw_start & t< fw(2)))) + k, 'k-', 'LineWidth', 1);
         
     end
     
@@ -1870,10 +1908,10 @@ function pushbutton13_Callback(hObject, eventdata, handles)
 
 defAns = { num2str(getappdata(gcf, 'HighCorner')) num2str(getappdata(gcf, 'LowCorner')) ...
     num2str(getappdata(gcf, 'DeltaLowerLimit')) num2str(getappdata(gcf, 'DeltaUpperLimit')) ...
-    getappdata(gcf, 'ChannelsKeep') num2str(getappdata(gcf, 'NewSR')) };
+    getappdata(gcf, 'ChannelsKeep') num2str(getappdata(gcf, 'NewSR')), getappdata(gcf, 'Networks') };
 
 prmpt = { 'High frequency filter corner, Hz', 'Low frequency filter corner, Hz',...
-    'Minimum Delta', 'Maximum Delta', 'Channel, comma seperated', 'New Sample Rate'};
+    'Minimum Delta', 'Maximum Delta', 'Channel, comma seperated', 'New Sample Rate', 'Networks'};
 
 sPar = inputdlg(prmpt, 'Set Data Parameters', 1, defAns);
 
@@ -1885,6 +1923,7 @@ if ~isempty(sPar)
     setappdata(gcf,'DeltaUpperLimit', sPar{4});
     setappdata(gcf,'ChannelsKeep',    sPar{5});
     setappdata(gcf,'NewSR',           sPar{6});
+    setappdata(gcf,'Networks',        sPar{7});
     
 end
 

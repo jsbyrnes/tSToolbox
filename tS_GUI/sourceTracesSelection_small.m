@@ -850,8 +850,8 @@ if ~dl
             xd             = minlen/Traces(1).sampleRate;
             midpoint       = (xd/2);
             xlimits        = [ (midpoint - xrange) ((midpoint) + xrange) ];
-            fitting_window = [ (midpoint - xrange/4) ((midpoint) + xrange/4) ];
-            fw_start       = (midpoint - xrange/3);
+            fitting_window = [ (midpoint - xrange/3) ((midpoint) + xrange/3) ];
+            fw_start       = (midpoint - xrange/2);
             
             % set "use" to yes for all of them unless they are out of range
             useVec = true(1, length(Traces));

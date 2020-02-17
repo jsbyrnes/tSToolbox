@@ -19,7 +19,7 @@ function [ TD_parameters ] = define_TDstructure( )
                                         %otherwise the code tends to carve
                                         %out weird stations and give them
                                         %their own cells
-    TD_parameters.likelyhood       = 'Laplacian';%Gaussian or Laplacian
+    TD_parameters.likelyhood       = 'Laplacian';%Gaussian, Laplacian, or DoubleGaussian
     
     %%%%%%%map parameters
     TD_parameters.nodeSpacing      = 20;%also used for slices the ray path

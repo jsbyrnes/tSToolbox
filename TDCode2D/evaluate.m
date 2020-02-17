@@ -34,7 +34,15 @@ function [ phiM, likelyhood ] = evaluate( xCell, yCell, tScell, allTS, allSig, d
         
         phiM       = sum(abs(ptS - allTS)./allSig);
         likelyhood = -sum(log(2*allSig))*length(allTS) - sum(phiM);
+                    
+    elseif strcmp(TD_parameters.likelyhood, 'DoubleGaussian')
+        
+        phiM       = sum((ptS - allTS).^2);%not used
+        likelyhood = sum( model.allSig(3)/(sqrt(2*pi*model.allSig(1)))*...
+            exp( ((ptS - allTS).^2)./(2*model.allSig(1)^2)) + ...
+            (1 - model.allSig(3))/(sqrt(2*pi*model.allSig(2)))*...
+            exp( ((ptS - allTS).^2)./(2*model.allSig(2)^2)));
         
     end
-            
+    
 end

@@ -180,10 +180,10 @@ function [ dataStruct ] = load_data_SaltonTrough( TD_parameters )
 
     [coastX, coastY] = mfwdtran(mstruct, coastlat, coastlon);
     
-    minX = min(dataX) - TD_parameters.buffr;
-    maxX = max(dataX) + TD_parameters.buffr;
-    minY = min(dataY) - TD_parameters.buffr;
-    maxY = max(dataY) + TD_parameters.buffr;
+    minX = min(dataX) - TD_parameters.buffer;
+    maxX = max(dataX) + TD_parameters.buffer;
+    minY = min(dataY) - TD_parameters.buffer;
+    maxY = max(dataY) + TD_parameters.buffer;
 
     xVec = minX:TD_parameters.nodeSpacing:maxX;
     yVec = minY:TD_parameters.nodeSpacing:maxY;    
