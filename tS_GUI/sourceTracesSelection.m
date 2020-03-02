@@ -726,6 +726,9 @@ end
 
 save([savename 'Measurement.mat'], 'ts_run_all', 'Traces', 'ts_run', 'fw_start', 'fw', 'fw_ind');
 
+handles.SaveDataButton.String = 'Saved!';
+
+
 function DataLoadBox_Callback(hObject, eventdata, handles)
 % hObject    handle to DataLoadBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -790,7 +793,7 @@ if ~dl
         
         load(name)
         
-        handles.LoadDataButton.String = 'Loading...';
+        handles.SaveDataButton.String = 'Save Result';
         drawnow
         
         if ~exist('fw', 'var')%something that's saved
