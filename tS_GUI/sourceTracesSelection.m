@@ -44,6 +44,7 @@ end
 
 addpath('./wfTools/')
 addpath('./PickingCode/')
+addpath(genpath('./borders_v3.1.2'))
 
 % End initialization code - DO NOT EDIT
 
@@ -1062,6 +1063,16 @@ if ~dl
 
         pltSrcTrs  
         plotMap
+        
+        axes(handles.map_ax)
+        hold on
+        xl = xlim;
+        yl = ylim;
+        
+        borders('countries', 'Color', 'k')
+        borders('states', 'Color', 'k')
+    
+        xlim(xl);ylim(yl);
         
         handles.DiffButton.String = 'Acceleration';
         handles.DiffButton.Enable = 'on';
