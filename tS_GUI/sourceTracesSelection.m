@@ -1235,21 +1235,14 @@ handles = guihandles;
 %this aligns all the traces within the fitting window
 Traces = getappdata(gcf,'Traces');
 lh     = getappdata(gcf,'lineHandles');
-cwf0   = getappdata(gcf,'cwf');
+cwf    = getappdata(gcf,'currentWf');
 
-for k = 1:length(Traces)
-    
-    Traces(k).data = -1*Traces(k).data;
-    lh(k).YData    = Traces(k).data + k;
-    
-    setappdata(gcf,'cwf',k);
-    
-    add_to_source%remove the old
-    add_to_source%add the shifted
-        
-end
+Traces(cwf).data = -1*Traces(cwf).data;
+lh(cwf).YData    = Traces(cwf).data + cwf;
 
-setappdata(gcf, 'cwf',cwf0);
+add_to_source%remove the old
+add_to_source%add the shifted
+
 setappdata(gcf, 'Traces', Traces);
 
 pltSrcTrs
