@@ -267,6 +267,10 @@ if dataLoaded
     inSrcVec = getappdata(gcf,'inSrcVec');
     plotmode = getappdata(gcf,'plotmode');
 
+    t        = getappdata(gcf, 't');
+    stfw     = getappdata(gcf, 'fw_start');
+    fw       = getappdata(gcf, 'fitting_window');
+    
     %the following is so that traces included in source estimation are
     %highlighted
     lw=ones(size(inSrcVec));
@@ -322,7 +326,7 @@ if dataLoaded
 
             Traces = getappdata(gcf,'Traces');
             Traces(cwf).data = circshift(Traces(cwf).data, -1);        
-            lh(cwf).YData = Traces(cwf).data + cwf;
+            lh(cwf).YData = Traces(cwf).data/rms(Traces(cwf).data(t>stfw & t<fw(2))) + cwf;
             setappdata(gcf, 'Traces', Traces);
                        
             add_to_source%remove the old
@@ -337,7 +341,7 @@ if dataLoaded
 
             Traces = getappdata(gcf,'Traces');
             Traces(cwf).data = circshift(Traces(cwf).data, 1);        
-            lh(cwf).YData = Traces(cwf).data + cwf;
+            lh(cwf).YData = Traces(cwf).data/rms(Traces(cwf).data(t>stfw & t<fw(2))) + cwf;
             setappdata(gcf, 'Traces', Traces);
 
             add_to_source%remove the old
@@ -899,7 +903,8 @@ if ~dl
 
                 Traces(k).arc = arc;
                 Traces(k).azi = azi;
-
+                Traces(k).dt  = 0;%bookkeeping
+                
             end
             
             if ~any(useVec)
@@ -1225,7 +1230,7 @@ for k = 1:length(Traces)
     add_to_source%remove the old
     add_to_source%add the shifted
     
-    Traces(k).dt = dt(k);
+    Traces(k).dt = Traces(k).dt + dt(k);
     
 end
 
