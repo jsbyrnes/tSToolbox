@@ -22,7 +22,7 @@ function varargout = sourceTracesSelection(varargin)
 
 % Edit the above text to modify the response to help sourceTracesSelection
 
-% Last Modified by GUIDE v2.5 21-Nov-2019 11:45:52
+% Last Modified by GUIDE v2.5 24-Mar-2020 11:51:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,8 @@ function sourceTracesSelection_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to sourceTracesSelection (see VARARGIN)
 
+set(gcf,'renderer','opengl') %this helps a lot with ginput sluggishness.
+
 % Choose default command line output for sourceTracesSelection
 handles.output = hObject;
 
@@ -76,8 +78,8 @@ addpath(genpath('./PickingCode/'))
 setappdata(gcf, 'HighCorner', '3');
 setappdata(gcf, 'LowCorner', '0.02');
 setappdata(gcf, 'ChannelsKeep', 'BHZ');
-setappdata(gcf, 'DeltaUpperLimit', '90');
-setappdata(gcf, 'DeltaLowerLimit', '30');
+setappdata(gcf, 'DeltaUpperLimit', '180');
+setappdata(gcf, 'DeltaLowerLimit', '0');
 
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
@@ -317,6 +319,11 @@ if dataLoaded
                 
                 pltSrcTrs
                 
+                %this moves the star without replotting the entire map
+                hMark=getappdata(gcf,'hMark');
+                Traces=getappdata(gcf,'Traces');
+                hMark.XData=Traces(cwf).longitude;
+                hMark.YData=Traces(cwf).latitude;
             end
 
         elseif strcmp(key.Key,'downarrow')
@@ -333,6 +340,11 @@ if dataLoaded
 
                 pltSrcTrs
 
+                %this moves the star without replotting the entire map
+                hMark=getappdata(gcf,'hMark');
+                Traces=getappdata(gcf,'Traces');
+                hMark.XData=Traces(cwf).longitude;
+                hMark.YData=Traces(cwf).latitude;
             end
 
         elseif strcmp(key.Key,'leftarrow')
@@ -369,6 +381,7 @@ if dataLoaded
 
             useFunc%flips if in or out of useVec
             pltSrcTrs
+            plotMap
             
         elseif strcmp(key.Key,'space')
 
@@ -418,7 +431,7 @@ if dataLoaded
         
     end
     
-    plotMap
+    
     
 end
 
@@ -1189,7 +1202,7 @@ for k = 1:length(Traces)
         
 end
 
-handles.XCORButton.String = 'Running...';
+handles.XCORButton.String = '...';
 drawnow
 
 dt         = zeros(size(Traces));
@@ -1215,7 +1228,7 @@ setappdata(gcf, 'Traces', Traces);
 
 pltSrcTrs
 
-handles.XCORButton.String = 'XCOR';
+handles.XCORButton.String = 'XC';
 drawnow
 
 
@@ -1917,3 +1930,64 @@ function pushbutton13_KeyPressFcn(hObject, eventdata, handles)
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in LineUp_btn.
+function LineUp_btn_Callback(hObject, eventdata, handles)
+% hObject    handle to LineUp_btn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles = guihandles;
+
+%this aligns all the traces within the fitting window
+useVec    = logical(getappdata(gcf,'useVec'));
+Traces    = getappdata(gcf,'Traces');
+fw_start  = getappdata(gcf,'fw_start');
+fw        = getappdata(gcf,'fitting_window');
+lh        = getappdata(gcf,'lineHandles');
+t         = getappdata(gcf,'t');
+cwf0      = getappdata(gcf,'cwf');
+
+Tclipped = Traces;
+
+%clip the traces and zero the deleted ones
+for k = 1:length(Traces)
+    
+    Tclipped(k).data = Traces(k).data(t > fw_start & t < fw(2));
+        
+end
+
+handles.LineUp_btn.String = '...';
+drawnow
+
+
+%find the min value in each clipped trace
+for k = 1:length(Tclipped)
+    [~,minIx(k)]=min(Tclipped(k).data); 
+end
+
+%get the shift in samples by subtracting the mean from the ixs
+dtsamples=-round(minIx-mean(minIx));
+dt=dtsamples/Traces(1).sampleRate;
+
+for k = 1:length(Traces)
+    
+    Traces(k).data = circshift(Traces(k).data, dtsamples(k));
+    lh(k).YData    = Traces(k).data + k;
+
+    setappdata(gcf,'cwf',k);
+    
+    add_to_source%remove the old
+    add_to_source%add the shifted
+    
+    Traces(k).dt = dt(k);
+    
+end
+
+setappdata(gcf,'cwf',cwf0);
+setappdata(gcf, 'Traces', Traces);
+
+pltSrcTrs
+
+handles.LineUp_btn.String = 'LU';
+drawnow
