@@ -83,6 +83,10 @@ setappdata(gcf, 'DeltaLowerLimit', '0');
 
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
+set(gcf,'WindowScrollWheelFcn',@scrollFcn) %MB April 15 2020
+
+%for moving the traces laterally by a variable amount
+setappdata(gcf, 'trShiftX', 1);
 
 % make the figure resizeable
 set(gcf,'Resize','on')
@@ -283,6 +287,10 @@ end
 
 dataLoaded = getappdata(gcf, 'dataLoaded');
 
+%this is for moving the traces laterally by more than one sample (up to 9)
+k1=key.Key(1);
+if any(k1=='123456789'); setappdata(gcf,'trShiftX',str2double(k1)*2);  end
+
 if dataLoaded
     
     handles  = guihandles;
@@ -322,8 +330,8 @@ if dataLoaded
                 %this moves the star without replotting the entire map
                 hMark=getappdata(gcf,'hMark');
                 Traces=getappdata(gcf,'Traces');
-                hMark.XData=Traces(cwf).longitude;
-                hMark.YData=Traces(cwf).latitude;
+                set(hMark,'XData',Traces(cwf).longitude);
+                set(hMark,'YData',Traces(cwf).latitude);
             end
 
         elseif strcmp(key.Key,'downarrow')
@@ -343,8 +351,8 @@ if dataLoaded
                 %this moves the star without replotting the entire map
                 hMark=getappdata(gcf,'hMark');
                 Traces=getappdata(gcf,'Traces');
-                hMark.XData=Traces(cwf).longitude;
-                hMark.YData=Traces(cwf).latitude;
+                set(hMark,'XData',Traces(cwf).longitude);
+                set(hMark,'YData',Traces(cwf).latitude);
             end
 
         elseif strcmp(key.Key,'leftarrow')
@@ -353,13 +361,14 @@ if dataLoaded
             lh=getappdata(gcf,'lineHandles');
 
             Traces = getappdata(gcf,'Traces');
-            Traces(cwf).data = circshift(Traces(cwf).data, -1);        
+            Traces(cwf).data = circshift(Traces(cwf).data, -1*getappdata(gcf,'trShiftX'));        
             lh(cwf).YData = Traces(cwf).data + cwf;
             setappdata(gcf, 'Traces', Traces);
                        
             add_to_source%remove the old
             add_to_source%add the shifted
-                        
+            setappdata(gcf,'trShiftX',1)% reset to move one sample at a time            
+            
             pltSrcTrs
 
         elseif strcmp(key.Key,'rightarrow')
@@ -368,13 +377,14 @@ if dataLoaded
             lh=getappdata(gcf,'lineHandles');
 
             Traces = getappdata(gcf,'Traces');
-            Traces(cwf).data = circshift(Traces(cwf).data, 1);        
+            Traces(cwf).data = circshift(Traces(cwf).data, 1*getappdata(gcf,'trShiftX'));        
             lh(cwf).YData = Traces(cwf).data + cwf;
             setappdata(gcf, 'Traces', Traces);
 
             add_to_source%remove the old
             add_to_source%add the shifted
-                        
+            setappdata(gcf,'trShiftX',1)% reset to move one sample at a time            
+            
             pltSrcTrs
             
         elseif strcmp(key.Key,'backspace')
@@ -665,7 +675,8 @@ function plotMap
     hMapQC.ButtonDownFcn  = @ClickMap;
     hMapNQC.ButtonDownFcn = @ClickMap;
     
-    hMark = plot(ts_run(1, cwf).longitude, ts_run(1, cwf).latitude, 'k*', 'MarkerSize', 10);
+    hMark(1) = plot(ts_run(1, cwf).longitude, ts_run(1, cwf).latitude, 'k+', 'MarkerSize', 10, 'linewidth',1);
+    hMark(2) = plot(ts_run(1, cwf).longitude, ts_run(1, cwf).latitude, 'wx', 'MarkerSize', 10, 'linewidth',1);
 
     setappdata(gcf,'hMapQC',  hMapQC);
     setappdata(gcf,'hMapNQC', hMapNQC);
@@ -1719,9 +1730,24 @@ midpoint = getappdata(gcf, 'midpoint');
 xrange   = getappdata(gcf, 'xrange');
 inSrcVec = getappdata(gcf, 'inSrcVec');
 Traces   = getappdata(gcf, 'Traces');
+ts_run   = getappdata(gcf, 'ts_run'); %NOTE: MB added this, it wasn't updating ts_run March27_2020
 
+%ts_run may not exist yet. It gets created after fitting waveforms or when clicking on the map before fitting.
+%the following takes care of that, same as in plotMap.
+if isempty(ts_run)
+    ts_run = getappdata(gcf, 'Traces');
+    for k = 1:length(ts_run)
+        ts_run(k).tStar_WF = 0;
+    end
+end
+
+
+
+%actually remove the ones for which usevec is false;
 Traces   = Traces(useVec);
+ts_run   = ts_run(:,useVec); %the colon is because ts_run may have several rows. It likely does if fitWaveforms has run.
 
+%remove the traces so we can re-plot
 lh = getappdata(gcf, 'lineHandles');
 delete(lh)
 
@@ -1753,6 +1779,7 @@ ylim([-1 (length(line_handles)+1)])
 
 setappdata(gcf, 'lineHandles',line_handles);
 setappdata(gcf, 'Traces', Traces);
+setappdata(gcf, 'ts_run', ts_run);
 setappdata(gcf, 'currentWf', 1);
 setappdata(gcf, 'useVec', ones(size(Traces)));
     
@@ -1991,3 +2018,18 @@ pltSrcTrs
 
 handles.LineUp_btn.String = 'LU';
 drawnow
+
+function scrollFcn(h_obj,evt)
+handles=guihandles;
+nTraces=getappdata(gcf,'nTraces');
+yl=get(handles.allWf_ax,'ylim');
+ydist=yl(2)-yl(1);
+ydist=ydist*.1; %will move by a third of current
+if evt.VerticalScrollCount < 0
+    ydist=min(ydist,yl(1)); %to prevent from going off the top
+    yl=yl-ydist;
+elseif evt.VerticalScrollCount > 0
+    ydist=min(ydist,(nTraces+1-yl(2))); %to prevent from going off the bottom
+    yl=yl+ydist;
+end
+set(handles.allWf_ax,'ylim',yl)
