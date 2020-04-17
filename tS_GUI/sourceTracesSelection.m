@@ -20,7 +20,7 @@ function varargout = sourceTracesSelection(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-%Hey Max
+%Hey Joe
 
 % Edit the above text to modify the response to  help sourceTracesSelection
 
