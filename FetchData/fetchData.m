@@ -20,6 +20,7 @@ for ke=1:length(E)
         %happened
         
         sDate=datenum(S(ks).StartDate);
+        if isempty(S(ks).EndDate); S(ks).EndDate='2500-01-01 00:00:00.000'; end
         eDate=datenum(S(ks).EndDate);
         eqDate=datenum(E(ke).PreferredTime);
         

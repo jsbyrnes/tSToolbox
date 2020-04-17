@@ -624,4 +624,5 @@ CS = getappdata(gcf,'ChannelString');
 EM = getappdata(gcf,'Email');
 PW = getappdata(gcf,'Password');
 
+
 dummy = fetchData(E, S, tB, tA, DP, FT, TF, SR, CS, EM, PW);
