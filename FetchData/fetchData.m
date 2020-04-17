@@ -20,26 +20,13 @@ for ke=1:length(E)
         %happened
         
         sDate=datenum(S(ks).StartDate);
+        if isempty(S(ks).EndDate); S(ks).EndDate='2500-01-01 00:00:00.000'; end
         eDate=datenum(S(ks).EndDate);
         eqDate=datenum(E(ke).PreferredTime);
-        
-        if isempty(eDate)
-           
-            eDate = Inf;
-            
-        end
-        
-        try
         
         if ~(eqDate>sDate && eqDate<eDate) %if eq not between eDate and sDate
             %disp('skipped one')
             continue
-        end
-        
-        catch
-            
-            keyboard
-            
         end
         
         %calculate Delta

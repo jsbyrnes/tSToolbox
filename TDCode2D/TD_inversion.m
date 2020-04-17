@@ -1,14 +1,13 @@
 %fit a smooth surface to all t* observations through an inversion scheme.
 clear, close all
 
-
 %parpool(12);
 
 name = 'AllRio_tSWF';
 
 TD_parameters = define_TDstructure( );
 
-dataStruct  = load_data_SaltonTrough(TD_parameters);
+dataStruct  = load_data_AllRio_tSWF(TD_parameters, 'All');
 
 TD_parameters.interp_style = 'nearest';
 TD_parameters.sig_flag     = 3;
