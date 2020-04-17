@@ -103,6 +103,21 @@ handles.map_ax.Box='on';
 handles.currWf_ax.Box='on';
 handles.allWf_ax.Box='on';
 
+% make the figure resizeable
+set(gcf,'Resize','on')
+
+% and now make the actual graphic objects resizable
+f=gcf; c=f.Children;
+for k=1:length(c)
+    c(k).Units='normalized';
+end
+
+%some cosmetic stuff
+handles.tSFWplot.Box='on';
+handles.map_ax.Box='on';
+handles.currWf_ax.Box='on';
+handles.allWf_ax.Box='on';
+
 % --- Outputs from this function are returned to the command line.
 function varargout = sourceTracesSelection_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
