@@ -24,7 +24,7 @@ function varargout = sourceTracesSelection(varargin)
 
 % Edit the above text to modify the response to  help sourceTracesSelection
 
-% Last Modified by GUIDE v2.5 24-Mar-2020 11:51:46
+% Last Modified by GUIDE v2.5 17-Apr-2020 13:55:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -244,6 +244,8 @@ function done_btn_Callback(hObject, eventdata, handles)
 
         line_handles(k) = plot(t, Traces(k).data + k, 'k-', 'lineWidth', 1);
 
+        line_handles(k).ButtonDownFcn = @ClickCWF;
+        
     end
 
     xlabel('Time, s')
@@ -707,7 +709,7 @@ function add_to_source
     forSrc   = getappdata(gcf,'forSrc');
     srcIx    = forSrc{1}; srcTr=forSrc{2};
 
-    if ~inSrcVec(cwf)
+  if ~inSrcVec(cwf)
         %add this wf number to the list
        srcIx=[srcIx; cwf]; 
        %add this wf to the set
@@ -911,7 +913,7 @@ if ~dl
 
             xd             = minlen/Traces(1).sampleRate;
             midpoint       = (xd/2);
-            xlimits        = [ (midpoint - xrange/2) ((midpoint) + xrange/2) ];
+            xlimits        = [ (midpoint - xrange) ((midpoint) + xrange) ];
             fitting_window = [ (midpoint - xrange/4) ((midpoint) + xrange/4) ];
             fw_start       = (midpoint - xrange/3);
             
@@ -1273,18 +1275,14 @@ Traces = getappdata(gcf,'Traces');
 lh     = getappdata(gcf,'lineHandles');
 cwf0   = getappdata(gcf,'cwf');
 
-for k = 1:length(Traces)
-    
-    Traces(k).data = -1*Traces(k).data;
-    lh(k).YData    = Traces(k).data + k;
-    
-    setappdata(gcf,'cwf',k);
-    
-    add_to_source%remove the old
-    add_to_source%add the shifted
-        
-end
+Traces(cwf0).data = -1*Traces(cwf0).data;
+lh(cwf0).YData    = Traces(cwf0).data + k;
 
+setappdata(gcf,'cwf',k);
+
+add_to_source%remove the old
+add_to_source%add the flipped waveform
+        
 setappdata(gcf, 'cwf',cwf0);
 setappdata(gcf, 'Traces', Traces);
 
@@ -2050,3 +2048,127 @@ elseif evt.VerticalScrollCount > 0
     yl=yl+ydist;
 end
 set(handles.allWf_ax,'ylim',yl)
+
+
+% --- Executes on button press in pushbutton15.
+function pushbutton15_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton15 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+%keep only the traces that were not culled out
+Traces         = getappdata(gcf,'Traces');
+useVec         = find(getappdata(gcf,'useVec'));
+inSrcVec       = find(getappdata(gcf, 'inSrcVec'));
+fw_start       = getappdata(gcf,'fw_start');
+fitting_window = getappdata(gcf,'fitting_window');
+t              = getappdata(gcf,'t');
+xrange         = getappdata(gcf,'xrange');
+midpoint       = getappdata(gcf,'midpoint');
+
+window_ind     = find( (t > midpoint - xrange) & (t < midpoint + xrange));
+t              = t(window_ind);
+fw_start       = fw_start - t(1);
+fitting_window = fitting_window - t(1);
+t              = t - t(1);
+
+%cut the data and the source
+for i = 1:length(Traces)
+    
+    Traces(i).data        = detrend(Traces(i).data(window_ind));
+    Traces(i).data        = Traces(i).data/rms(Traces(i).data(t > fw_start & t < fitting_window(2)));
+    Traces(i).sampleCount = length(Traces(i).data);
+    
+end
+
+setappdata(gcf, 'Traces', Traces);
+setappdata(gcf, 'fw_start', fw_start);
+setappdata(gcf, 'fitting_window', fitting_window);
+setappdata(gcf, 't', t);
+
+setappdata(gcf, 'forSrc', { [] [] });
+cwf0 = getappdata(gcf,'currentWf');
+for k = 1:length(inSrcVec)
+       
+    setappdata(gcf, 'currentWf', useVec(k));
+
+    add_to_source;%remove, then add back in
+    
+end
+setappdata(gcf, 'currentWf', cwf0);
+
+lh = getappdata(gcf, 'lineHandles');
+delete(lh)
+
+axes(handles.allWf_ax)
+hold on
+%plot all of the traces
+for k = 1:length(Traces)
+        
+    line_handles(k)               = plot(t, Traces(k).data/max(abs(Traces(k).data)) ...
+        + k, 'k-', 'lineWidth', 1);
+    line_handles(k).ButtonDownFcn = @ClickCWF;
+
+    if ~any(k==useVec)
+       
+        line_handles(k).LineStyle = '--';
+        
+    end
+    
+    if any(k==inSrcVec)
+       
+        line_handles(k).LineWidth = 4;
+        
+    end
+    
+    if k == cwf0
+       
+        line_handles(k).LineWidth = 4;
+        line_handles(k).Color     = 'b';
+        
+    end
+    
+end
+
+xlabel('Time, s')
+xlim([1 max(t)])
+ylim([-1 (length(line_handles)+1)])
+
+setappdata(gcf,'lineHandles',line_handles);
+setappdata(gcf,'t',t);
+
+fwh            = getappdata(gcf, 'fwh');
+
+delete(fwh);
+
+%update plotting variables
+midpoint = mean(t);
+xrange   = max(t)/2;
+
+setappdata(gcf, 'midpoint', midpoint);
+setappdata(gcf, 'xrange', xrange);
+
+axes(handles.currWf_ax)
+ylimits = ylim;
+stfwh   = plot( [ fw_start fw_start ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
+fwh(1)  = plot( [ fitting_window(1) fitting_window(1) ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
+fwh(2)  = plot( [ fitting_window(2) fitting_window(2) ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
+setappdata(gcf, 'stfwh', stfwh);
+setappdata(gcf, 'fwh', fwh);
+
+stfwh_all      = getappdata(gcf, 'stfwh_all');
+fwh_all        = getappdata(gcf, 'fwh_all');
+
+delete(stfwh_all);
+delete(fwh_all);
+
+axes(handles.allWf_ax)
+ylimits = ylim;
+stfwh_all = plot( [ fw_start fw_start ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 1.5);
+setappdata(gcf, 'stfwh_all', stfwh_all);
+fwh_all(1) = plot( [ fitting_window(1) fitting_window(1) ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
+fwh_all(2) = plot( [ fitting_window(2) fitting_window(2) ], [ ylimits(1) ylimits(2) ], 'k--', 'LineWidth', 0.5);
+setappdata(gcf, 'fwh_all', fwh_all);
+
+pltSrcTrs
+
