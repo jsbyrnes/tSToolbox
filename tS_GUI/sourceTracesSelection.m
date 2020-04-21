@@ -1221,7 +1221,7 @@ fw_start  = getappdata(gcf,'fw_start');
 fw        = getappdata(gcf,'fitting_window');
 lh        = getappdata(gcf,'lineHandles');
 t         = getappdata(gcf,'t');
-cwf0      = getappdata(gcf,'cwf');
+cwf0      = getappdata(gcf,'currentWf');
 
 Tclipped = Traces;
 
@@ -1244,7 +1244,7 @@ for k = 1:length(Traces)
     Traces(k).data = circshift(Traces(k).data, dtsamples(k));
     lh(k).YData    = Traces(k).data + k;
 
-    setappdata(gcf,'cwf',k);
+    setappdata(gcf,'currentWf',k);
     
     add_to_source%remove the old
     add_to_source%add the shifted
@@ -1253,7 +1253,7 @@ for k = 1:length(Traces)
     
 end
 
-setappdata(gcf,'cwf',cwf0);
+setappdata(gcf,'currentWf',cwf0);
 setappdata(gcf, 'Traces', Traces);
 
 pltSrcTrs
@@ -1273,19 +1273,16 @@ handles = guihandles;
 %this aligns all the traces within the fitting window
 Traces = getappdata(gcf,'Traces');
 lh     = getappdata(gcf,'lineHandles');
-cwf0   = getappdata(gcf,'cwf');
+cwf0   = getappdata(gcf,'currentWf');
 
 Traces(cwf0).data = -1*Traces(cwf0).data;
-lh(cwf0).YData    = Traces(cwf0).data + k;
+lh(cwf0).YData    = Traces(cwf0).data + cwf0;
 
-setappdata(gcf,'cwf',k);
+setappdata(gcf, 'Traces', Traces);
 
 add_to_source%remove the old
 add_to_source%add the flipped waveform
         
-setappdata(gcf, 'cwf',cwf0);
-setappdata(gcf, 'Traces', Traces);
-
 pltSrcTrs
 
 
@@ -1300,7 +1297,7 @@ handles = guihandles;
 %this aligns all the traces within the fitting window
 Traces = getappdata(gcf, 'Traces');
 lh     = getappdata(gcf, 'lineHandles');
-cwf0   = getappdata(gcf, 'cwf');
+cwf0   = getappdata(gcf, 'currentWf');
 t      = getappdata(gcf, 't');
 stfw   = getappdata(gcf, 'fw_start');
 fw     = getappdata(gcf, 'fitting_window');
@@ -1332,7 +1329,7 @@ for k = 1:length(Traces)
     
     lh(k).YData    = Traces(k).data + k;
     
-    setappdata(gcf,'cwf',k);
+    setappdata(gcf,'currentWf',k);
     setappdata(gcf, 'Traces', Traces);
     
     add_to_source%remove the old
@@ -1340,7 +1337,7 @@ for k = 1:length(Traces)
         
 end
 
-setappdata(gcf, 'cwf',cwf0);
+setappdata(gcf, 'currentWf',cwf0);
 setappdata(gcf, 'Traces', Traces);
 
 pltSrcTrs
@@ -1356,7 +1353,7 @@ handles = guihandles;
 %this aligns all the traces within the fitting window
 Traces = getappdata(gcf, 'Traces');
 lh     = getappdata(gcf, 'lineHandles');
-cwf0   = getappdata(gcf, 'cwf');
+cwf0   = getappdata(gcf, 'currentWf');
 t      = getappdata(gcf, 't');
 stfw   = getappdata(gcf, 'fw_start');
 fw     = getappdata(gcf, 'fitting_window');
@@ -1388,7 +1385,7 @@ for k = 1:length(Traces)
 
     lh(k).YData    = Traces(k).data + k;
     
-    setappdata(gcf,'cwf',k);
+    setappdata(gcf,'currentWf',k);
     setappdata(gcf, 'Traces', Traces);
     
     add_to_source%remove the old
@@ -1396,7 +1393,7 @@ for k = 1:length(Traces)
         
 end
 
-setappdata(gcf, 'cwf',cwf0);
+setappdata(gcf, 'currentWf',cwf0);
 setappdata(gcf, 'Traces', Traces);
 
 pltSrcTrs
