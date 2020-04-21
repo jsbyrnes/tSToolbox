@@ -1,5 +1,10 @@
 function [ TD_parameters ] = define_TDstructure( )
 
+    %%%%%%%where to get the data
+    TD_parameters.data_dir = '';
+    TD_parameters.data_tag = '';
+    TD_parameters.QC       = 1;%remove QCed traces (1) or keep them in (0)
+
     %%%%%%%search parameters
     TD_parameters.sig_b            = 0.01;%in s
     TD_parameters.sig_r            = 20;
