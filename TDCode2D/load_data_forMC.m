@@ -6,11 +6,11 @@ function [ dataStruct ] = load_data_forMC( TD_parameters )
     dataE     = [];
     allSta    = {};
 
-    fnames = dir([ TD_parameters.data_dir '/' TD_parameters.data_tag '*Measurement.mat']);    
+    fnames = dir([ TD_parameters.data_dir '/*Measurement.mat']);    
     
     for k = 1:length(fnames)
     
-        fname = [ TD_parameters.data_dir '/' TD_parameters.data_tag '.mat'];
+        fname = [ TD_parameters.data_dir '/' fnames(k).name];
 
         load(fname, 'ts_run', 'Traces');
         traces=ts_run; clear ts_run;
@@ -92,6 +92,11 @@ function [ dataStruct ] = load_data_forMC( TD_parameters )
     [dataX, dataY] = mfwdtran(mstruct,allLats,allLons);
     %make the grid on which to invert
 
+    minX = min(dataX) - TD_parameters.buffer;
+    maxX = max(dataX) + TD_parameters.buffer;
+    minY = min(dataY) - TD_parameters.buffer;
+    maxY = max(dataY) + TD_parameters.buffer;
+    
     xVec = minX:TD_parameters.nodeSpacing:maxX;
     yVec = minY:TD_parameters.nodeSpacing:maxY;    
     

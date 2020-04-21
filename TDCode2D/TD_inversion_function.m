@@ -1,6 +1,6 @@
-function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct)
+function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct, chainid)
 
-    rng(round(mod(now*1e12,1e3)))%seed down to less than the milisecond
+    rng(chainid*round(mod(now*1e12,1e3)))%seed down to less than the milisecond
 
     xVec = dataStruct.xVec;
     yVec = dataStruct.yVec;
