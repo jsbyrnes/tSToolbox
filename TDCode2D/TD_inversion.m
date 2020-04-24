@@ -5,7 +5,7 @@ TD_parameters = define_TDstructure( );
 dataStruct    = load_data_forMC(TD_parameters);
 
 %% Let's invert
-parfor k = 1:TD_parameters.n_chains
+for k = 1:TD_parameters.n_chains
     
     disp(['Chain #' num2str(k) ]);
     warning off MATLAB:scatteredInterpolant:DupPtsAvValuesWarnId
