@@ -6,7 +6,7 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct, chain
     yVec = dataStruct.yVec;
 
     n = length(dataStruct.dataX);
-               
+
     %initialize the chain
     %first four nodes are top corners and CANNOT be moved
     
@@ -82,9 +82,17 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct, chain
     [ model.phi, likelyhood] = evaluate(model.xCell, model.yCell, model.tSCell, dataStruct.allTS, allSig, ...
         dataStruct.dataE, dataStruct.dataX, dataStruct.dataY, TD_parameters);
             
-    model.likelyhood         = likelyhood;
-        
+    model.likelyhood = likelyhood;
+    current_percent  = TD_parameters.print_on;
+    
     for iter = 1:TD_parameters.n_iter
+        
+        if 100*iter/TD_parameters.n_iter > current_percent
+           
+            disp([ 'Chain #' num2str(chainid) ' ' num2str(current_percent) '% complete' ]);
+            current_percent = current_percent + TD_parameters.print_on;
+            
+        end
         
         %pick birth, death, move, change, or noise
         if TD_parameters.sig_sig > 0

@@ -19,6 +19,7 @@ function [ TD_parameters ] = define_TDstructure( )
     TD_parameters.n_iter           = 5e5;%for now, just iterate to a max
     TD_parameters.burn_in          = 2.5e5;
     TD_parameters.keep_each        = 2.5e3;
+    TD_parameters.print_on         = 5;%in percent completed
     TD_parameters.max_cells        = 100;%for starting
     TD_parameters.min_cells        = 5;%for entire model, CANNOT be below 4
     TD_parameters.min_sta_per_cell = 0; %restricts the minimum scale features in the model. Not recommended.
