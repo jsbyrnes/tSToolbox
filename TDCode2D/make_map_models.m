@@ -24,7 +24,8 @@ function [ model_stats ] = make_map_models( models, xMat, yMat, sig_flag, pdf_x,
         
         fine_models.tS    = fine_models.tS - mean(fine_models.tS(:));
         
-        %how big is each cell? Gives an idea of the model smoothness
+        %how big is each cell? Gives an idea of the model
+        %smoothness............ not that useful but sorta interesting. 
         for j = 1:numel(xMat)
            
             cellDistancevec(j) = min( sqrt((xMat(j) - models(k).xCell).^2 + ...

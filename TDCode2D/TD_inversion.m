@@ -13,8 +13,8 @@ for k = 1:TD_parameters.n_chains
         
 end
 
-disp(['Saving models named ' name]);
-save(name)
+disp(['Saving models named ' TD_parameters.savename]);
+save(TD_parameters.savename)
 
 models          = models(:);
 [xMat, yMat]    = meshgrid(dataStruct.xVec, dataStruct.yVec);
