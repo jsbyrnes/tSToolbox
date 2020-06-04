@@ -6,7 +6,8 @@ load('CMfine.mat')
 
 savename = 'Rio16';
 
-loadname = './AllRio_tSWF*';
+%loadname = './AllRio_tSWF*';
+loadname = './BayesianInv_HighLavaPlain*';
 
 label = '\Deltat*_p, s';
 %label = '\Delta\Sigma';

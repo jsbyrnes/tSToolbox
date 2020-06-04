@@ -52,8 +52,6 @@ function attnOperator = calcAttnOperator(tStar,frequencies,w1,offset)
 %  w1 is reference frequency
 %  offset is amount of offset of the atttenuation pulse
 
-%JSB alpha is not yet in use
-
  if nargin==2       % set w1 AND offset to default values
      w1=400;
      offset=0;

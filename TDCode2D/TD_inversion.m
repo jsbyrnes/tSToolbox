@@ -2,10 +2,12 @@
 clear, close all
 
 TD_parameters = define_TDstructure( );
-dataStruct    = load_data_forMC(TD_parameters);
+%dataStruct    = load_data_forMC(TD_parameters);
+
+load('BayesianInv_HighLavaPlain.mat', 'dataStruct');
 
 %% Let's invert
-for k = 1:TD_parameters.n_chains
+parfor k = 1:TD_parameters.n_chains
     
     disp(['Chain #' num2str(k) ]);
     warning off MATLAB:scatteredInterpolant:DupPtsAvValuesWarnId
