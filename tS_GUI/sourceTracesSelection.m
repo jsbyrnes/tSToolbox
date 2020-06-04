@@ -240,7 +240,7 @@ function done_btn_Callback(hObject, eventdata, handles)
     %plot all of the traces
     for k = 1:length(Traces)
 
-        Traces(k).data = Traces(k).data/max(Traces(k).data(fw_start:fitting_window(2)));
+        Traces(k).data = Traces(k).data/max(abs(Traces(k).data(fw_start:fitting_window(2))));
 
         line_handles(k) = plot(t, Traces(k).data + k, 'k-', 'lineWidth', 1);
 
