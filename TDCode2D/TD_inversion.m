@@ -2,9 +2,9 @@
 clear, close all
 
 TD_parameters = define_TDstructure( );
-%dataStruct    = load_data_forMC(TD_parameters);
+dataStruct    = load_data_forMC(TD_parameters);
 
-load('BayesianInv_HighLavaPlain.mat', 'dataStruct');
+%load('BayesianInv_HighLavaPlain.mat', 'dataStruct');
 
 %% Let's invert
 parfor k = 1:TD_parameters.n_chains
@@ -23,8 +23,8 @@ models          = models(:);
 [ model_stats ] = make_map_models( models, xMat, yMat, TD_parameters.sig_flag, -0.5:0.05:0.5, 0.66, TD_parameters.interp_style);
 
 figure
-contourf(xMat, yMat, model_stats.mean, -0.1:0.02:0.1);
+contourf(xMat, yMat, model_stats.mean, -0.15:0.02:0.15);
 h = colorbar; h.Label.String = '\Deltat*';
-colormap('pink')
+colormap('jet')
 hold on
 plot(dataStruct.dataX, dataStruct.dataY, 'rs');

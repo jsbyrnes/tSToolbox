@@ -92,6 +92,12 @@ function [ dataStruct ] = load_data_forMC( TD_parameters )
     [dataX, dataY] = mfwdtran(mstruct,allLats,allLons);
     %make the grid on which to invert
 
+    if TD_parameters.y_collpase
+       
+        dataY(:) = 0;
+        
+    end
+    
     minX = min(dataX) - TD_parameters.buffer;
     maxX = max(dataX) + TD_parameters.buffer;
     minY = min(dataY) - TD_parameters.buffer;

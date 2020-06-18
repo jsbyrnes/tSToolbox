@@ -257,16 +257,7 @@ function [ model_hist ] = TD_inversion_function(TD_parameters, dataStruct, chain
                     yCell_n = model.yCell;
 
                     xCell_n(move) = normrnd(model.xCell(move), (max(xVec) - min(xVec))*(TD_parameters.sig_r/100));
-                    
-                    if TD_parameters.ydamp ~= 0
-                    
-                        yCell_n(move) = normrnd(model.yCell(move), (max(yVec) - min(yVec))*(TD_parameters.sig_r/100))/TD_parameters.ydamp;
-                    
-                    else
-                        
-                        yCell_n(move) = normrnd(model.yCell(move), (max(yVec) - min(yVec))*(TD_parameters.sig_r/100));
-                        
-                    end
+                    yCell_n(move) = normrnd(model.yCell(move), (max(yVec) - min(yVec))*(TD_parameters.sig_r/100));
                         
                     if xCell_n(move) < max(xVec) && xCell_n(move) > min(xVec) ...
                             && yCell_n(move) < max(yVec) && yCell_n(move) > min (yVec)
