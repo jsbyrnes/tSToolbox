@@ -7,14 +7,14 @@ function [ TD_parameters ] = define_TDstructure( )
     TD_parameters.stations_to_remove = { };%empty to use all stations
     
     %%%%%%%search parameters
-    TD_parameters.sig_b            = 0.01;%in s
-    TD_parameters.sig_r            = 20;
-    TD_parameters.sig_sig          = 0.001;%in s
+    TD_parameters.sig_b            = 0.1;%in s. Recommended default of 10% of the range
+    TD_parameters.sig_r            = 50;%big is good
+    TD_parameters.sig_sig          = 0.025;%in s
     TD_parameters.sig_flag         = 1;%1, uniform. 2, station. 3, event.
     TD_parameters.min_error        = 0.0001;
     TD_parameters.interp_style     = 'nearest';%linear or nearest
     TD_parameters.y_collpase       = 1;%force stations on to a line
-    TD_parameters.range            = [ -0.4 0.4 ];
+    TD_parameters.range            = [ -0.5 0.5 ];
     TD_parameters.n_chains         = 4;
     TD_parameters.n_iter           = 5e5;%for now, just iterate to a max
     TD_parameters.burn_in          = 2.5e5;
@@ -27,9 +27,9 @@ function [ TD_parameters ] = define_TDstructure( )
     TD_parameters.likelyhood       = 'Gaussian';%Gaussian or Laplacian
     
     %%%%%%%map parameters
-    TD_parameters.nodeSpacing      = 20;
-    TD_parameters.buffer           = 50;%in km
-    TD_parameters.rotation         = 55;%in degrees
+    TD_parameters.nodeSpacing      = 20;%for plotting at the end
+    TD_parameters.buffer           = 50;%in km. How far out you can go on the edges
+    TD_parameters.rotation         = 0;%in degrees. For the map projection.
 
     if TD_parameters.n_iter <= TD_parameters.burn_in
        
