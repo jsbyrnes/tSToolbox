@@ -41,6 +41,9 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
+
+addpath('../irisFetch/');
+
 % End initialization code - DO NOT EDIT
 
 
@@ -68,8 +71,8 @@ set(gcf,'ToolBar','figure')
 
 %plot coastline
 subplot(handles.map_ax); hold on;
-C=load('coast');
-plot(C.long,C.lat,'k-'); daspect([1 1 1]); ylim([-90 75])
+C=load('coastlines');
+plot(C.coastlon,C.coastlat,'k-'); daspect([1 1 1]); ylim([-90 75])
 
 
 

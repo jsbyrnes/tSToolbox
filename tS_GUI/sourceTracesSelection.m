@@ -82,6 +82,7 @@ setappdata(gcf, 'LowCorner', '0.02');
 setappdata(gcf, 'ChannelsKeep', 'BHZ');
 setappdata(gcf, 'DeltaUpperLimit', '180');
 setappdata(gcf, 'DeltaLowerLimit', '0');
+setappdata(gcf, 'xrange', '20');
 
 % set the keypress_fcn for the figure
 set(gcf,'WindowKeyPressFcn',@chngTr)
@@ -425,7 +426,7 @@ if dataLoaded
 
             axes(handles.currWf_ax)
             midpoint = getappdata(gcf, 'midpoint');
-            xrange   = getappdata(gcf, 'xrange');
+            xrange   = str2num(getappdata(gcf, 'xrange'));
             t        = getappdata(gcf, 't');
 
             if strcmp(key.Key,'leftarrow')
@@ -454,7 +455,7 @@ if dataLoaded
             xlim([ minval maxval ]);
 
             setappdata(gcf,'midpoint', midpoint); %these are the traces that will go into the source estimate
-            setappdata(gcf,'xrange',   xrange); %these are the traces that will go into the source estimate
+            setappdata(gcf,'xrange',   num2str(xrange)); %these are the traces that will go into the source estimate
             
         end
         
@@ -513,8 +514,16 @@ if plotmode == 1
                         
         for k = 1:length(forSrc{1})
         
+            try
+            
             srcTr(:, k) = srcTr(:, k)...
                 /rms(srcTr(t > stfw & t < fw(2), k));
+            
+            catch
+                
+                keyboard
+                
+            end
             
         end
         
@@ -629,8 +638,14 @@ end
 axes(handles.currWf_ax)
 
 midpoint = getappdata(gcf, 'midpoint');
-xrange   = getappdata(gcf, 'xrange');
+xrange   = str2num(getappdata(gcf, 'xrange'));
+
+try
 xlim([ (midpoint - xrange) (midpoint + xrange) ]);
+catch
+keyboard
+end
+
 %ylim([-1 1]);
 set(gca, 'YTick', []);
    
@@ -750,7 +765,7 @@ function useFunc
 
        useVec(cwf)=true;
        set(lineHandles(cwf),'lineStyle','-')
-
+       
     else
 
        useVec(cwf)=false; 
@@ -831,11 +846,12 @@ handles  = guihandles;
 name     = handles.DataLoadBox.String;
 dl       = getappdata(gcf, 'dataLoaded');
 
-HighCorner      = getappdata(gcf, 'HighCorner');
-LowCorner       = getappdata(gcf, 'LowCorner');
+HighCorner      = str2num(getappdata(gcf, 'HighCorner'));
+LowCorner       = str2num(getappdata(gcf, 'LowCorner'));
 ChannelsKeep    = getappdata(gcf, 'ChannelsKeep');
-DeltaUpperLimit = getappdata(gcf, 'DeltaUpperLimit');
-DeltaLowerLimit = getappdata(gcf, 'DeltaLowerLimit');
+DeltaUpperLimit = str2num(getappdata(gcf, 'DeltaUpperLimit'));
+DeltaLowerLimit = str2num(getappdata(gcf, 'DeltaLowerLimit'));
+xrange          = str2num(getappdata(gcf, 'xrange'));
 
 if ~dl
 
@@ -846,14 +862,13 @@ if ~dl
 
     end
     
-    xrange        = 20;    
     %get the data and plot it all
 
     if exist(name, 'file')
 
-        filter_bounds                   = [ str2num(LowCorner) str2num(HighCorner) ];
+        filter_bounds                   = [ (LowCorner) (HighCorner) ];
         filter_bounds(filter_bounds==0) = NaN;
-        degVec = [ str2num(DeltaLowerLimit) str2num(DeltaUpperLimit) ];
+        degVec = [ (DeltaLowerLimit) (DeltaUpperLimit) ];
         
         load(name)
         
@@ -862,9 +877,6 @@ if ~dl
         
         if ~exist('fw', 'var')%something that's saved
         
-            chan = {Traces.channel};
-            Traces(~strcmp(chan, ChannelsKeep)) = [];
-
             if isempty(Traces)
 
                 error('No traces with the given channel(s)');
@@ -872,8 +884,8 @@ if ~dl
             end
 
             lon = [Traces.longitude];
-            [~, sind] = sort(lon);
-            Traces = Traces(sind);
+            [~, staind] = sort(lon);
+            Traces = Traces(staind);
 
             % remove instrument response only when it has not been removed
             % during fetching
@@ -931,11 +943,90 @@ if ~dl
 
                 end
 
-                Traces(k).arc = arc;
-                Traces(k).azi = azi;
+                Traces(k).evtarc = arc;
+                Traces(k).evtazi = azi;
 
             end
 
+            if (strcmp(ChannelsKeep, 'R') || strcmp(ChannelsKeep, 'T'))
+                                           
+                %rotate the two horizontals into R and T, then keep the one
+                %you want, rename and store
+                
+                sta = unique({Traces.station});
+                
+                for j = 1:length(sta)
+                   
+                    %get horizontals
+                    ind = find(strcmp({Traces.station}, sta{j}) & ([Traces.dip] == 0));
+                    
+                    if isempty(ind)
+                        
+                        continue
+                        
+                    end
+                    
+                    hT = Traces(ind);
+                    
+                    %now figure out which one is +90 of the other
+                    azimuths = [hT.azimuth];
+                                                            
+                    if (length(azimuths) > 2)
+                        
+                        for qqq = 1:length(ind)
+                        
+                            Traces(ind(qqq)).channel = { 'null' };
+                            
+                        end
+                        
+                        continue
+                        
+                    end
+                    
+                    if wrapTo360(azimuths(1) - azimuths(2)) < wrapTo360(azimuths(2) - azimuths(1))
+                        
+                        aind = [ 2 1 ];
+                        
+                    else
+                        
+                        aind = [ 1 2 ];
+                        
+                    end
+                    
+                    azimuths = azimuths(aind);
+                                        
+                    if (abs(wrapTo360(diff(azimuths) - 90)) > 2) %slight tolerence for weird entries
+                        
+                        for qqq = 1:length(ind)
+                        
+                            Traces(ind(qqq)).channel = { 'null' };
+                            
+                        end
+                        
+                        continue
+                        
+                    end
+                                        
+                    hT  = hT(aind);
+                    ind = ind(aind);
+                    
+                    a  = wrapTo360(hT(1).evtazi - azimuths(1));
+                    
+                    rt = [ cosd(a) sind(a); -sind(a) cosd(a) ]*[hT(1).data'; hT(2).data'];
+                    
+                    Traces(ind(1)).data = rt(1, :)';
+                    Traces(ind(2)).data = rt(2, :)';
+                    Traces(ind(1)).channel = 'R';
+                    Traces(ind(2)).channel = 'T';
+                                        
+                end
+                
+            end
+            
+            chan = {Traces.channel};
+            Traces(~strcmp(chan, ChannelsKeep)) = [];
+            useVec(~strcmp(chan, ChannelsKeep)) = [];
+            
             if ~any(useVec)
                 
                 f = msgbox('No traces within range', 'Error','error');
@@ -1058,7 +1149,7 @@ if ~dl
         setappdata(gcf,'useVec',        useVec);
         setappdata(gcf,'inSrcVec',      inSrcVec);
         setappdata(gcf,'midpoint',      midpoint); %these are the traces that will go into the source estimate
-        setappdata(gcf,'xrange',        xrange); %these are the traces that will go into the source estimate
+        setappdata(gcf,'xrange',        num2str(xrange)); %these are the traces that will go into the source estimate
         setappdata(gcf,'t',             t);
         setappdata(gcf,'plotmode',      1);
         setappdata(gcf,'stfwh',         []);
@@ -1242,8 +1333,12 @@ dtsamples  = round(dt*Traces(1).sampleRate);
 for k = 1:length(Traces)
     
     Traces(k).data = circshift(Traces(k).data, dtsamples(k));
+    try
     lh(k).YData    = Traces(k).data + k;
-
+    catch
+    keyboard
+    end
+    
     setappdata(gcf,'currentWf',k);
     
     add_to_source%remove the old
@@ -1413,7 +1508,7 @@ t        = getappdata(gcf, 't');
 useVec   = logical(getappdata(gcf, 'useVec'));
 plotmode = getappdata(gcf, 'plotmode');
 midpoint = getappdata(gcf, 'midpoint');
-xrange   = getappdata(gcf, 'xrange');
+xrange   = str2num(getappdata(gcf, 'xrange'));
     
 if strcmp(hOject.String, 'Hide Deleted')
     
@@ -1739,7 +1834,7 @@ handles = guihandles;
 t        = getappdata(gcf, 't');
 useVec   = logical(getappdata(gcf, 'useVec'));
 midpoint = getappdata(gcf, 'midpoint');
-xrange   = getappdata(gcf, 'xrange');
+xrange   = str2num(getappdata(gcf, 'xrange'));
 inSrcVec = getappdata(gcf, 'inSrcVec');
 Traces   = getappdata(gcf, 'Traces');
 ts_run   = getappdata(gcf, 'ts_run'); %NOTE: MB added this, it wasn't updating ts_run March27_2020
@@ -1944,10 +2039,10 @@ function pushbutton13_Callback(hObject, eventdata, handles)
 
 defAns = { num2str(getappdata(gcf, 'HighCorner')) num2str(getappdata(gcf, 'LowCorner')) ...
     num2str(getappdata(gcf, 'DeltaLowerLimit')) num2str(getappdata(gcf, 'DeltaUpperLimit')) ...
-    getappdata(gcf, 'ChannelsKeep') };
+    getappdata(gcf, 'ChannelsKeep'), num2str(getappdata(gcf, 'xrange')) };
 
 prmpt = { 'High frequency filter corner, Hz', 'Low frequency filter corner, Hz',...
-    'Minimum Delta', 'Maximum Delta', 'Channel, comma seperated'};
+    'Minimum Delta', 'Maximum Delta', 'Channel, comma seperated', 'Width of plotting window, s'};
 
 sPar = inputdlg(prmpt, 'Set Data Parameters', 1, defAns);
 
@@ -1958,6 +2053,7 @@ if ~isempty(sPar)
     setappdata(gcf,'DeltaLowerLimit', sPar{3});
     setappdata(gcf,'DeltaUpperLimit', sPar{4});
     setappdata(gcf,'ChannelsKeep',    sPar{5});
+    setappdata(gcf,'xrange',          sPar{6});
     
 end
 
