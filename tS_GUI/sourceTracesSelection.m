@@ -20,8 +20,6 @@ function varargout = sourceTracesSelection(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-%Hey Joe
-
 % Edit the above text to modify the response to  help sourceTracesSelection
 
 % Last Modified by GUIDE v2.5 17-Apr-2020 13:55:01
@@ -80,8 +78,8 @@ addpath(genpath('./PickingCode/'))
 setappdata(gcf, 'HighCorner', '3');
 setappdata(gcf, 'LowCorner', '0.02');
 setappdata(gcf, 'ChannelsKeep', 'BHZ');
-setappdata(gcf, 'DeltaUpperLimit', '180');
-setappdata(gcf, 'DeltaLowerLimit', '0');
+setappdata(gcf, 'DeltaUpperLimit', '90');
+setappdata(gcf, 'DeltaLowerLimit', '30');
 setappdata(gcf, 'xrange', '20');
 
 % set the keypress_fcn for the figure
