@@ -143,7 +143,7 @@ function done_btn_Callback(hObject, eventdata, handles)
     fitting_window = getappdata(gcf,'fitting_window');
     filter_bounds  = getappdata(gcf,'filter_bounds');
     t              = getappdata(gcf,'t');
-    xrange         = getappdata(gcf,'xrange');
+    xrange         = str2num(getappdata(gcf,'xrange'));
     midpoint       = getappdata(gcf,'midpoint');
 
     %plot source and pick fitting window
@@ -270,7 +270,7 @@ function done_btn_Callback(hObject, eventdata, handles)
     xrange   = max(t)/2;
 
     setappdata(gcf, 'midpoint', midpoint);
-    setappdata(gcf, 'xrange', xrange);
+    setappdata(gcf, 'xrange', num2str(xrange));
 
     axes(handles.currWf_ax)
     ylimits = ylim;
