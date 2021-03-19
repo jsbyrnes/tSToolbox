@@ -847,6 +847,7 @@ dl       = getappdata(gcf, 'dataLoaded');
 HighCorner      = str2num(getappdata(gcf, 'HighCorner'));
 LowCorner       = str2num(getappdata(gcf, 'LowCorner'));
 ChannelsKeep    = getappdata(gcf, 'ChannelsKeep');
+ChannelsKeep    = strsplit(ChannelsKeep,','); %in case ChannelsKeep is a comma-separated list
 DeltaUpperLimit = str2num(getappdata(gcf, 'DeltaUpperLimit'));
 DeltaLowerLimit = str2num(getappdata(gcf, 'DeltaLowerLimit'));
 xrange          = str2num(getappdata(gcf, 'xrange'));
@@ -946,7 +947,7 @@ if ~dl
 
             end
 
-            if (strcmp(ChannelsKeep, 'R') || strcmp(ChannelsKeep, 'T'))
+            if length(ChannelsKeep)==1 && (strcmp(ChannelsKeep, 'R') || strcmp(ChannelsKeep, 'T'))
                                            
                 %rotate the two horizontals into R and T, then keep the one
                 %you want, rename and store
@@ -1022,8 +1023,21 @@ if ~dl
             end
             
             chan = {Traces.channel};
-            Traces(~strcmp(chan, ChannelsKeep)) = [];
-            useVec(~strcmp(chan, ChannelsKeep)) = [];
+            
+            %compare to each name in the ChannelsKeep list (cell array)
+            keepTr=false(length(ChannelsKeep),length(chan)); %initialize this
+            for k=1:length(ChannelsKeep)
+                keepTr(k,:)=strcmp(chan,ChannelsKeep(k));
+            end
+            keepTr=sum(keepTr,1);
+            %the above will have a logical true for each trace whose
+            %channel matches one of the channels in the ChannelsKeep list.
+            
+            %remove the ones that we're not going to keep.
+            Traces(~keepTr) = [];
+            useVec(~keepTr) = [];
+            
+
             
             if ~any(useVec)
                 
