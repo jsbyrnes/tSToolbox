@@ -77,7 +77,7 @@ addpath(genpath('./PickingCode/'))
 %set default parameters
 setappdata(gcf, 'HighCorner', '3');
 setappdata(gcf, 'LowCorner', '0.02');
-setappdata(gcf, 'ChannelsKeep', 'BHZ');
+setappdata(gcf, 'ChannelsKeep', 'BHZ,HHZ');
 setappdata(gcf, 'DeltaUpperLimit', '90');
 setappdata(gcf, 'DeltaLowerLimit', '30');
 setappdata(gcf, 'xrange', '20');
