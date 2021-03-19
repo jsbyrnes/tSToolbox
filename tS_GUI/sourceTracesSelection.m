@@ -839,6 +839,7 @@ function LoadDataButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % first some parameters and things, not sure I need all this.
+set(gcf,'pointer','watch')
 
 handles  = guihandles;
 name     = handles.DataLoadBox.String;
@@ -1218,7 +1219,8 @@ if ~dl
     end
     
 end
-       
+set(gcf,'pointer','arrow')
+
 % --- Executes on button press in QCButton.
 function QCButton_Callback(hObject, eventdata, handles)
 % hObject    handle to QCButton (see GCBO)
