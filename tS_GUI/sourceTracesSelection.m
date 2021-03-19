@@ -2110,13 +2110,29 @@ handles.LineUp_btn.String = '...';
 drawnow
 
 
-%find the min value in each clipped trace
-for k = 1:length(Tclipped)
-    [~,minIx(k)]=min(Tclipped(k).data); 
+%find the min/max value in each clipped trace
+%first, determine if I'm dealing with peaks or troughs
+for k=1:length(Tclipped)
+   [~,ix]=max(abs(Tclipped(k).data));
+    a(k)=sign(Tclipped(k).data(ix)); %1 for peaks, -1 for troughs
+end
+a=sign(mean(a)); %in case they are not all peaks or troughs, go with majority
+
+
+if a==1 %I'm delaing with peaks
+    for k = 1:length(Tclipped)
+        [~,luIx(k)]=max(Tclipped(k).data); %luIx is line-up index
+    end
+elseif a==-1 %I'm dealing with troughs
+    for k = 1:length(Tclipped)
+        [~,luIx(k)]=min(Tclipped(k).data);
+    end
 end
 
+clear a ix %clean up
+
 %get the shift in samples by subtracting the mean from the ixs
-dtsamples=-round(minIx-mean(minIx));
+dtsamples=-round(luIx-mean(luIx));
 dt=dtsamples/Traces(1).sampleRate;
 
 for k = 1:length(Traces)
