@@ -1053,8 +1053,8 @@ if ~dl
             fitting_window = fw;%fw_start already loaded in correct name
 
             % set "use" to yes for all of them unless they are out of range
-            useVec   = [Traces.QC];
-            inSrcVec = [Traces.inSrc];
+            useVec   = [Traces.QC]';
+            inSrcVec = [Traces.inSrc]';
 
             t = (1:minlen)/Traces(1).sampleRate;
             
