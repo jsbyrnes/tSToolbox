@@ -16,6 +16,17 @@ for k=1:length(Traces)
     %If it is, I can just read that information into resp and not use
     %wfGetResp
         
+    %first, check if comment has already been added
+    if isfield(Traces(k), 'comments')
+        
+        if strcmp(Traces(k).comments(1:27), 'instrument response removed')
+           
+            continue %already removed
+            
+        end
+        
+    end
+    
     resp          = wfGetResp(Traces(k));
     %corrTraces(k) = wfInstCorr1trace_acausal(Traces(k), resp);
     corrTraces(k) = wfInstCorr1trace_causal(Traces(k), resp);
@@ -28,11 +39,29 @@ end
 %original traces structures don't already have a 'comments' field.
 
 for k=1:length(Traces)
+    
     if isfield(corrTraces,'comments')
+        
+        %first, check if comment has already been added
+        if isfield(Traces(k), 'comments')
+
+            if strcmp(Traces(k).comments(1:27), 'instrument response removed')
+
+                continue %already removed
+
+            end
+
+        end
+        
         C=corrTraces(k).comments;
+        
         C=[C;corrComment];
+        
         corrTraces(k).comments=C;
+    
     else
+        
         corrTraces(k).comments=corrComment;
+        
     end
 end
