@@ -1,5 +1,9 @@
 %fit a smooth surface to all t* observations through an inversion scheme.
 %This inversion is quick and useful for many applications. 
+
+%Usage note - this copy is from the Github. If you are using it, save a
+%seperate copy so as not to lose your work whenever you pull. 
+
 clear, close all
 %% collect all lats, lons and t* by loading one results file at a time.
 
@@ -12,7 +16,7 @@ model_smallness     = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %EDIT THIS LINE TO LOAD THE DATA
-fnames = dir('../MM_raw/*Measurement.mat');
+fnames = dir('ENTER-DATA-PATH-HERE/*Measurement.mat');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%
@@ -22,18 +26,18 @@ name = 'LinearInv2';
 
 %%%%%%
 %These lines control how things are plotted
-v                   = -0.15:0.01:0.15;
-clim                = [-0.15 0.15];
-save_for_gmt        = 1;
-rotation            = 55;
-collapse_y          = 0;
-buffer              = 20;%in km on the outside
+v                   = -0.15:0.01:0.15; %contour interval for plot of result
+clim                = [-0.15 0.15];%color limits for contour plot
+save_for_gmt        = 0;%export for GMT (1) or not (0)
+rotation            = 0;%clockwise rotation of the map projection in degrees
+collapse_y          = 0;%if you are using a linear array, rotate on to the x axis and force stations on to line (1)
+buffer              = 20;%in km, space in model outside of the stations
 
 label_for_colorbar  = '\Deltat*, s';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Minor inversion parameters
-nodeSpacing         = 10;
+nodeSpacing         = 100; %in km. If too small, grid will be made slowly. 
 maxDist             = nodeSpacing*5;
 QC                  = 1;
 
@@ -97,7 +101,7 @@ for k=1:length(fnames)
     
 end
 
-uSta=unique(allSta); %list of all station names
+[uSta, sta_ind] =unique(allSta); %list of all station names
 
 for k = 1:length(unique(dataE))
     
@@ -147,7 +151,6 @@ yVec=minY:nodeSpacing:maxY;
 %hold on
 
 %plot(xMat(:),yMat(:),'rs')
-
 
 %% Let's invert
 % zeroeth step: sizes of things
@@ -274,9 +277,7 @@ else
     caxis(clim)
     hold on
 
-    [dX, indY] = unique(dataX);
-
-    scatter(dX, dataY(indY),10, MIsta,'filled', 'MarkerEdgeColor', 'k')
+    scatter(dataX(sta_ind), dataY(sta_ind),10, MIsta,'filled', 'MarkerEdgeColor', 'k')
     set(gca,'YDir','normal')
     daspect([1 1 1])
 
